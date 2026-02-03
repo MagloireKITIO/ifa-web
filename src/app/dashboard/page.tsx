@@ -128,21 +128,21 @@ export default function DashboardPage() {
       {/* Hero Section avec dégradé bleu */}
       <section className="relative bg-gradient-to-br from-blue-600 to-blue-700 text-white overflow-hidden">
         <div className="absolute inset-0 bg-black/5" />
-        <div className="relative max-w-7xl mx-auto px-6 py-10">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
                 Vue d'Ensemble - IFA Dashboard
               </h1>
-              <div className="flex items-center gap-3 text-blue-100">
-                <span className="text-sm">Statistiques en temps réel</span>
-                <span>•</span>
-                <span className="text-sm">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-blue-100">
+                <span className="text-xs sm:text-sm">Statistiques en temps réel</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="text-xs sm:text-sm">
                   {kpis ? `${kpis.totalMembers} membres` : 'Chargement...'}
                 </span>
               </div>
             </div>
-            <Badge className="bg-white text-blue-700 hover:bg-white/90">
+            <Badge className="bg-white text-blue-700 hover:bg-white/90 whitespace-nowrap self-start sm:self-auto text-xs sm:text-sm px-2 sm:px-3 py-1">
               Dernière mise à jour : Aujourd'hui
             </Badge>
           </div>
@@ -211,15 +211,15 @@ export default function DashboardPage() {
       </section>
 
       {/* Section Graphiques Principaux */}
-      <section className="max-w-7xl mx-auto px-6 py-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Graphique Croissance (60% / 3 colonnes) */}
-          <Card className="lg:col-span-3 p-6 bg-white shadow-md">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">
+          <Card className="lg:col-span-3 p-4 sm:p-6 bg-white shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                 Croissance des Membres
               </h2>
-              <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20">
+              <select className="text-xs sm:text-sm border border-gray-200 rounded-lg px-2 sm:px-3 py-1.5 text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20">
                 <option>12 derniers mois</option>
                 <option>6 derniers mois</option>
                 <option>3 derniers mois</option>
@@ -272,8 +272,8 @@ export default function DashboardPage() {
           </Card>
 
           {/* Graphique Répartition (40% / 2 colonnes) */}
-          <Card className="lg:col-span-2 p-6 bg-white shadow-md">
-            <h2 className="text-xl font-semibold text-foreground mb-6">
+          <Card className="lg:col-span-2 p-4 sm:p-6 bg-white shadow-md">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6">
               Répartition par Genre
             </h2>
 
@@ -341,7 +341,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Section Statistiques Détaillées */}
-      <section className="max-w-7xl mx-auto px-6 pb-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-6 sm:pb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Activités Spirituelles */}
           {dataLoading ? (
@@ -418,7 +418,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Section Actions Rapides */}
-      <section className="max-w-7xl mx-auto px-6 pb-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-6 sm:pb-8">
         <Card className="p-6 bg-gray-50 border-gray-200">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button

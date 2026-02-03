@@ -10,7 +10,7 @@ export function SourcingProgress({
   const percentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-4">
+    <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-muted-foreground">

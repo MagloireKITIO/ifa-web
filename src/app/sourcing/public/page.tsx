@@ -195,20 +195,20 @@ export default function SourcingPublicPage() {
       <SourcingProgress currentStep={currentStep} totalSteps={5} />
 
       {/* Contenu du formulaire */}
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* En-tête de l'étape */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <p className="text-sm text-muted-foreground mb-2">
             Étape {stepData.number} sur 5
           </p>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             {stepData.title}
           </h1>
-          <p className="text-muted-foreground">{stepData.description}</p>
+          <p className="text-sm sm:text-base text-muted-foreground">{stepData.description}</p>
         </div>
 
         {/* Composant de l'étape actuelle */}
-        <div className="bg-white rounded-xl p-8 shadow-md mb-8">
+        <div className="bg-white rounded-xl p-4 sm:p-6 md:p-8 shadow-md mb-6 sm:mb-8">
           {currentStep === 1 && (
             <Step1PersonalInfo
               formData={formData}
