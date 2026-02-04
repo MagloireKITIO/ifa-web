@@ -14,11 +14,17 @@ import {
   Clock,
   XCircle,
   FileEdit,
-  TrendingUp,
   Users,
 } from 'lucide-react';
-import { getUserReports, getCenterHouseChurchesReports, getReportsStatistics, type FullReport } from '@/lib/api/reports';
-import { loadDatabase } from '@/lib/api/db';
+import { 
+  getUserReports, 
+  getCenterHouseChurchesReports, 
+  getReportsStatistics, 
+  getOpenPeriods,
+  type FullReport 
+} from '@/lib/api/reports';
+import { getCenterById } from '@/lib/api/structure';
+import { supabase } from '@/lib/supabase'; // For direct fetch if needed, or use structure api
 
 export default function RapportsPage() {
   const router = useRouter();
@@ -42,10 +48,9 @@ export default function RapportsPage() {
 
       try {
         setDataLoading(true);
-        const db = await loadDatabase();
 
         // Trouver la période actuelle (non verrouillée)
-        const openPeriods = db.reportingPeriods.filter((p) => !p.isLocked);
+        const openPeriods = await getOpenPeriods();
         if (openPeriods.length > 0) {
           setCurrentPeriod(openPeriods[0]);
         }
@@ -55,14 +60,21 @@ export default function RapportsPage() {
         setReports(userReportsData);
 
         // Pour center_lead et admin, charger aussi les rapports des house churches
-        if (user.role === 'center_lead' && user.centerId) {
-          const hcReports = await getCenterHouseChurchesReports(user.centerId);
+        if (user.role === 'center_lead' && user.center_id) {
+          const hcReports = await getCenterHouseChurchesReports(user.center_id);
           setHouseChurchReports(hcReports);
 
-          const center = db.centers.find((c) => c.id === user.centerId);
+          const center = await getCenterById(user.center_id);
           setEntityName(center?.name || 'Centre');
-        } else if (user.role === 'house_lead' && user.houseChurchId) {
-          const houseChurch = db.houseChurches.find((h) => h.id === user.houseChurchId);
+        } else if (user.role === 'house_lead' && user.house_church_id) {
+          // Fetch house church name directly from supabase as we don't have getHouseChurchById yet in structure.ts
+          // Or use the list from structure.ts
+          const { data: houseChurch } = await supabase
+            .from('house_churches')
+            .select('name')
+            .eq('id', user.house_church_id)
+            .single();
+            
           setEntityName(houseChurch?.name || 'Cellule');
         }
 
@@ -271,8 +283,8 @@ export default function RapportsPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-sm text-muted-foreground hidden sm:block">
-                      {report.submittedAt
-                        ? new Date(report.submittedAt).toLocaleDateString('fr-FR')
+                      {report.submitted_at
+                        ? new Date(report.submitted_at).toLocaleDateString('fr-FR')
                         : 'Non soumis'}
                     </p>
                     {getStatusBadge(report.status)}

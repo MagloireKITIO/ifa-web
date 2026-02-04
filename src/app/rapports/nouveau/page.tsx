@@ -246,7 +246,7 @@ export default function NouveauRapportPage() {
                   </select>
                 </label>
 
-                {user.role === 'house_lead' && user.houseChurchId && (
+                {user.role === 'house_lead' && user.house_church_id && (
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm">
                       <strong>Cellule :</strong> Vous soumettez un rapport pour votre house church
@@ -254,7 +254,7 @@ export default function NouveauRapportPage() {
                   </div>
                 )}
 
-                {user.role === 'center_lead' && user.centerId && (
+                {user.role === 'center_lead' && user.center_id && (
                   <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm">
                       <strong>Centre :</strong> Vous soumettez un rapport pour votre centre
@@ -271,7 +271,7 @@ export default function NouveauRapportPage() {
               onChange={(data) => setFormData({ ...formData, financial: data })}
               errors={errors}
               userRole={user.role as 'house_lead' | 'center_lead'}
-              houseChurchId={user.houseChurchId}
+              houseChurchId={user.house_church_id}
             />
           )}
 

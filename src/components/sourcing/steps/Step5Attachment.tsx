@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SourcingFormData } from '@/types/sourcing';
-import { loadDatabase } from '@/lib/api/db';
+import { getCenters, getHouseChurches } from '@/lib/api/structure';
 import type { Center, HouseChurch } from '@/types';
 
 interface Step5AttachmentProps {
@@ -31,13 +31,17 @@ export function Step5Attachment({
   >([]);
   const [loading, setLoading] = useState(true);
 
-  // Charger les centres et cellules depuis db.json
+  // Charger les centres et cellules depuis Supabase
   useEffect(() => {
     async function loadData() {
       try {
-        const db = await loadDatabase();
-        setCenters(db.centers.filter((c) => c.status === 'active'));
-        setHouseChurches(db.houseChurches.filter((h) => h.status === 'active'));
+        const [allCenters, allHouseChurches] = await Promise.all([
+          getCenters(),
+          getHouseChurches(),
+        ]);
+        
+        setCenters(allCenters.filter((c) => c.status === 'active'));
+        setHouseChurches(allHouseChurches.filter((h) => h.status === 'active'));
       } catch (error) {
         console.error('Erreur chargement données:', error);
       } finally {
@@ -51,7 +55,7 @@ export function Step5Attachment({
   useEffect(() => {
     if (formData.centerId) {
       const filtered = houseChurches.filter(
-        (hc) => hc.centerId === formData.centerId
+        (hc) => hc.center_id === formData.centerId
       );
       setFilteredHouseChurches(filtered);
 
@@ -66,7 +70,7 @@ export function Step5Attachment({
       setFilteredHouseChurches([]);
       updateField('houseChurchId', '');
     }
-  }, [formData.centerId, houseChurches]);
+  }, [formData.centerId, houseChurches, updateField, formData.houseChurchId]);
 
   if (loading) {
     return (

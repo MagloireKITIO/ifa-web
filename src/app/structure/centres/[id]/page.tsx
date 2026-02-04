@@ -7,7 +7,7 @@ import { TopNavigation } from '@/components/layout/TopNavigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { loadDatabase } from '@/lib/api/db';
+import { getCenterById, getHouseChurchesByCenter, getCenterLeader } from '@/lib/api/structure';
 import {
   ArrowLeft,
   MapPin,
@@ -40,23 +40,19 @@ export default function CenterDetailsPage() {
     async function loadCenterData() {
       try {
         setDataLoading(true);
-        const db = await loadDatabase();
-
+        
         // Trouver le centre
-        const foundCenter = db.centers.find((c) => c.id === centerId);
+        const foundCenter = await getCenterById(centerId);
         setCenter(foundCenter || null);
 
         if (foundCenter) {
-          // Trouver les house churches du centre
-          const centerHouses = db.houseChurches.filter(
-            (h) => h.centerId === foundCenter.id
-          );
+          // Trouver les house churches et le leader en parallèle
+          const [centerHouses, leader] = await Promise.all([
+            getHouseChurchesByCenter(foundCenter.id),
+            getCenterLeader(foundCenter.id)
+          ]);
+          
           setHouseChurches(centerHouses);
-
-          // Trouver le leader du centre
-          const leader = db.users.find(
-            (u) => u.role === 'center_lead' && u.centerId === foundCenter.id
-          );
           setCenterLeader(leader || null);
         }
       } catch (error) {
@@ -137,7 +133,7 @@ export default function CenterDetailsPage() {
                 </Badge>
                 <span className="text-sm text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  Fondé le {new Date(center.foundedDate).toLocaleDateString('fr-FR')}
+                  Fondé le {new Date(center.founded_date).toLocaleDateString('fr-FR')}
                 </span>
               </div>
             </div>
@@ -199,7 +195,7 @@ export default function CenterDetailsPage() {
               </h3>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                  {centerLeader.fullName
+                  {centerLeader.full_name
                     .split(' ')
                     .map((n) => n[0])
                     .join('')
@@ -207,7 +203,7 @@ export default function CenterDetailsPage() {
                     .slice(0, 2)}
                 </div>
                 <div>
-                  <p className="font-medium">{centerLeader.fullName}</p>
+                  <p className="font-medium">{centerLeader.full_name}</p>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Mail className="w-3 h-3" />
                     {centerLeader.email}
@@ -253,11 +249,11 @@ export default function CenterDetailsPage() {
                   <div className="space-y-2 text-sm">
                     <p className="text-muted-foreground flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      {house.zoneArea}
+                      {house.zone_area}
                     </p>
                     <p className="text-muted-foreground flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      {house.hostName}
+                      {house.host_name}
                     </p>
                   </div>
                 </Card>

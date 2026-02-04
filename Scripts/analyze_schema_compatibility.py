@@ -50,9 +50,17 @@ def parse_sql_schema(path):
     
     # Regex to find CREATE TABLE statements
     # Matches: CREATE TABLE public.tablename ( content )
+    # Updated regex to be more robust with newlines and nested parenthesis
+    # We'll split by "CREATE TABLE" and then process chunks
+    
+    # Simple regex that captures the table name and the body up to the closing ); 
+    # NOTE: This assumes standard formatting as seen in the file
     table_matches = re.finditer(r'CREATE TABLE public\.(\w+)\s*\((.*?)\);', sql, re.DOTALL)
     
+    # Debug: Check if we found anything
+    count = 0
     for match in table_matches:
+        count += 1
         table_name = match.group(1)
         content = match.group(2)
         
@@ -61,6 +69,7 @@ def parse_sql_schema(path):
         lines = content.split('\n')
         for line in lines:
             line = line.strip()
+            # Skip comments, constraints, or empty lines
             if not line or line.startswith('--') or line.startswith('CONSTRAINT') or line.startswith('PRIMARY KEY') or line.startswith('FOREIGN KEY'):
                 continue
             
@@ -70,10 +79,32 @@ def parse_sql_schema(path):
             if len(parts) >= 2:
                 col_name = parts[0].replace('"', '') # remove quotes if any
                 col_type = parts[1].replace(',', '')
+                # Handle types like "decimal(15,2)" or "varchar(255)"
+                if len(parts) > 2 and '(' in parts[1] and ')' not in parts[1]:
+                     col_type += parts[2] # extremely basic handling
+                
                 columns[col_name] = col_type
                 
         schema[table_name] = columns
-        
+    
+    if count == 0:
+        print("WARNING: No tables found via Regex. Trying simpler line-by-line parsing.")
+        # Fallback parsing
+        current_table = None
+        for line in sql.split('\n'):
+            line = line.strip()
+            if line.startswith("CREATE TABLE public."):
+                current_table = line.split('.')[1].split(' ')[0]
+                schema[current_table] = {}
+            elif current_table and line.startswith(')'):
+                current_table = None
+            elif current_table and line and not line.startswith('--'):
+                parts = line.split()
+                if len(parts) >= 2 and not line.startswith('CONSTRAINT') and not line.startswith('PRIMARY KEY') and not line.startswith('FOREIGN KEY'):
+                     col_name = parts[0].replace('"', '')
+                     col_type = parts[1].replace(',', '')
+                     schema[current_table][col_name] = col_type
+
     return schema
 
 def generate_report(json_schema, sql_schema):
@@ -82,9 +113,14 @@ def generate_report(json_schema, sql_schema):
         "users": "profiles",
         "zones": "zones",
         "centers": "centers",
-        "houseChurches": "house_churches",
+        "house_churches": "house_churches",
         "reports": "reports",
-        "reportingPeriods": "reporting_periods",
+        "reporting_periods": "reporting_periods",
+        "sourcing_campaigns": "sourcing_campaigns",
+        "sourcing_responses": "sourcing_responses",
+        "notifications": "notifications",
+        "member_contributions": "member_contributions",
+        "audit_logs": "audit_logs",
         # Heuristic for other stats tables if present in json
     }
     

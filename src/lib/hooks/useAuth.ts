@@ -10,9 +10,17 @@ export function useAuth() {
 
   useEffect(() => {
     // Charger l'utilisateur au montage du composant
-    const currentUser = auth.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
+    const init = async () => {
+      try {
+        const currentUser = await auth.getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Failed to check auth status', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -25,8 +33,8 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
-    auth.logout();
+  const logout = async () => {
+    await auth.logout();
     setUser(null);
   };
 

@@ -8,7 +8,7 @@ import { MapView } from '@/components/structure/MapView';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { loadDatabase } from '@/lib/api/db';
+import { getCenters, getZones, getHouseChurches } from '@/lib/api/structure';
 import { Map as MapIcon, List, MapPin, Building2, Home } from 'lucide-react';
 import type { Center, HouseChurch, Zone } from '@/types';
 
@@ -31,10 +31,14 @@ export default function StructurePage() {
     async function loadStructureData() {
       try {
         setDataLoading(true);
-        const db = await loadDatabase();
-        setCenters(db.centers);
-        setZones(db.zones);
-        setHouseChurches(db.houseChurches);
+        const [allCenters, allZones, allHouseChurches] = await Promise.all([
+          getCenters(),
+          getZones(),
+          getHouseChurches(),
+        ]);
+        setCenters(allCenters);
+        setZones(allZones);
+        setHouseChurches(allHouseChurches);
       } catch (error) {
         console.error('Erreur chargement structure:', error);
       } finally {
@@ -204,7 +208,7 @@ export default function StructurePage() {
         {view === 'list' && (
           <div className="space-y-4">
             {zones.map((zone) => {
-              const zoneCenters = centers.filter((c) => c.zoneId === zone.id);
+              const zoneCenters = centers.filter((c) => c.zone_id === zone.id);
               return (
                 <Card key={zone.id} className="p-6">
                   <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -218,7 +222,7 @@ export default function StructurePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {zoneCenters.map((center) => {
                       const centerHouses = houseChurches.filter(
-                        (h) => h.centerId === center.id
+                        (h) => h.center_id === center.id
                       );
                       return (
                         <Card
@@ -247,7 +251,7 @@ export default function StructurePage() {
                               {centerHouses.length} cellules
                             </span>
                             <span className="text-muted-foreground">
-                              Fondé {new Date(center.foundedDate).getFullYear()}
+                              Fondé {new Date(center.founded_date).getFullYear()}
                             </span>
                           </div>
                         </Card>

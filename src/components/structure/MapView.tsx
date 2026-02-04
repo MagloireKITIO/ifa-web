@@ -84,7 +84,7 @@ export function MapView({ centers, onCenterClick }: MapViewProps) {
                     {center.address}
                   </p>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Fondé en {new Date(center.foundedDate).getFullYear()}
+                    Fondé en {new Date(center.founded_date).getFullYear()}
                   </p>
                   <div className="flex items-center gap-2 mb-3">
                     <span

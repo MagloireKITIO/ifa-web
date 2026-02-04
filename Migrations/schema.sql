@@ -46,6 +46,8 @@ CREATE TABLE public.centers (
   address text,
   founded_date date,
   status text DEFAULT 'active',
+  latitude decimal(10,8),
+  longitude decimal(11,8),
   created_at timestamp DEFAULT now()
 );
 
@@ -66,6 +68,8 @@ CREATE TABLE public.profiles (
   full_name text,
   role public.user_role DEFAULT 'viewer',
   center_id uuid REFERENCES public.centers(id),
+  house_church_id uuid REFERENCES public.house_churches(id),
+  avatar text,
   created_at timestamp DEFAULT now(),
   updated_at timestamp
 );
@@ -181,6 +185,59 @@ CREATE TABLE public.audit_logs (
 );
 
 -- -----------------------------------------------------------------------------
+-- G. Additional Modules (Sourcing, Notifications, Contributions)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE public.sourcing_campaigns (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text,
+  description text,
+  start_date timestamp,
+  end_date timestamp,
+  status text,
+  type text,
+  center_ids text[],
+  unique_link text,
+  qr_code text,
+  fields text[],
+  responses_count int DEFAULT 0,
+  created_at timestamp DEFAULT now(),
+  created_by uuid
+);
+
+CREATE TABLE public.sourcing_responses (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id uuid REFERENCES public.sourcing_campaigns(id),
+  submitted_at timestamp,
+  status text,
+  data jsonb
+);
+
+CREATE TABLE public.notifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id),
+  type text,
+  title text,
+  message text,
+  is_read boolean DEFAULT false,
+  created_at timestamp DEFAULT now(),
+  action_url text
+);
+
+CREATE TABLE public.member_contributions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_id uuid REFERENCES public.reports(id),
+  member_id uuid REFERENCES public.members(id),
+  period_id uuid REFERENCES public.reporting_periods(id),
+  house_church_id uuid REFERENCES public.house_churches(id),
+  contribution_type text,
+  amount decimal(15,2),
+  currency text DEFAULT 'XAF',
+  recorded_by text,
+  recorded_at timestamp DEFAULT now()
+);
+
+-- -----------------------------------------------------------------------------
 -- 3. SECURITY (RLS) & HELPER FUNCTIONS
 -- -----------------------------------------------------------------------------
 
@@ -216,6 +273,10 @@ ALTER TABLE public.stats_people ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stats_family ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stats_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sourcing_campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sourcing_responses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.member_contributions ENABLE ROW LEVEL SECURITY;
 
 -- Policies (Condensed)
 
@@ -257,6 +318,12 @@ USING (public.get_my_role() = 'house_lead' AND submitted_by = auth.uid());
 -- Stats Access (Financial)
 CREATE POLICY "Center Leads finance" ON public.stats_financial FOR ALL TO authenticated
 USING (public.get_my_role() = 'center_lead' AND EXISTS (SELECT 1 FROM public.reports r WHERE r.id = report_id AND r.center_id = public.get_my_center_id()));
+
+-- Additional Policies
+CREATE POLICY "Auth access sourcing_campaigns" ON public.sourcing_campaigns FOR ALL TO authenticated USING (true);
+CREATE POLICY "Auth access sourcing_responses" ON public.sourcing_responses FOR ALL TO authenticated USING (true);
+CREATE POLICY "Users view own notifications" ON public.notifications FOR ALL TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "Auth access member_contributions" ON public.member_contributions FOR ALL TO authenticated USING (true);
 
 -- -----------------------------------------------------------------------------
 -- 4. ANALYTICS VIEWS (KPIs)

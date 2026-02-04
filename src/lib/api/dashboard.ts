@@ -1,4 +1,4 @@
-import { loadDatabase } from './db';
+import { supabase } from '../supabase';
 import type {
   Database,
   StatsPeople,
@@ -59,33 +59,62 @@ export interface FamilyStats {
  * Calcule les KPIs principaux du dashboard
  */
 export async function getDashboardKPIs(): Promise<DashboardKPIs> {
-  const db = await loadDatabase();
+  // Fetch last 10 submitted reports with stats_people and stats_activities
+  const { data: reports, error } = await supabase
+    .from('reports')
+    .select(`
+      id,
+      submitted_at,
+      stats_people(*),
+      stats_activities(*)
+    `)
+    .eq('status', 'submitted') // Only submitted/approved reports? Mock used all. Let's use submitted/approved.
+    .order('submitted_at', { ascending: false })
+    .limit(10);
 
-  // Calculer le total des membres actifs (dernier rapport)
-  const latestPeopleStats = db.statsPeople.slice(-10); // 10 derniers rapports
-  const totalMembers = latestPeopleStats.reduce(
-    (sum, stat) => sum + stat.attendanceTotal,
-    0
-  );
-  const avgMembers = Math.round(totalMembers / latestPeopleStats.length);
+  if (error) {
+    console.error('Error fetching dashboard KPIs:', error);
+    return {
+      totalMembers: 0,
+      newThisWeek: 0,
+      participationRate: 0,
+      socialActions: 0,
+      trends: { members: 0, newMembers: 0, participation: 0, social: 0 },
+    };
+  }
 
-  // Calculer les nouveaux cette semaine (simulation)
-  const recentStats = db.statsPeople.slice(-3);
+  const reportList = (reports || []) as any[];
+
+  const latestPeopleStats = reportList
+    .map((r) => r.stats_people?.[0] || r.stats_people)
+    .filter((s): s is StatsPeople => !!s);
+  
+  const latestActivityStats = reportList
+    .map((r) => r.stats_activities?.[0] || r.stats_activities)
+    .filter((s): s is StatsActivities => !!s);
+
+  // Total members (avg of last 10)
+  const totalMembers = latestPeopleStats.length > 0 
+    ? Math.round(latestPeopleStats.reduce((sum: number, s: StatsPeople) => sum + s.attendance_total, 0) / latestPeopleStats.length)
+    : 0;
+
+  // New this week (last 3 reports approximation)
+  const recentStats = latestPeopleStats.slice(0, 3);
   const newThisWeek = recentStats.reduce(
-    (sum, stat) => sum + stat.newConverts + stat.firstTimers,
+    (sum: number, stat: StatsPeople) => sum + stat.new_converts + stat.first_timers,
     0
   );
 
-  // Taux de participation (simulation basée sur membres actifs)
-  const participationRate = 78; // Pourcentage fixe pour le prototype
+  // Participation rate (fixed for now as in mock)
+  const participationRate = 78;
 
-  // Actions sociales
-  const socialActions = db.statsActivities.reduce(
-    (sum, stat) => sum + stat.socialActionsCount,
+  // Social actions (total of fetched reports)
+  const socialActions = latestActivityStats.reduce(
+    (sum: number, stat: StatsActivities) => sum + stat.social_actions_count,
     0
   );
 
-  // Tendances (comparaison avec période précédente - simulation)
+  // Trends (simulation)
   const trends = {
     members: 5.2,
     newMembers: 12.5,
@@ -94,7 +123,7 @@ export async function getDashboardKPIs(): Promise<DashboardKPIs> {
   };
 
   return {
-    totalMembers: avgMembers,
+    totalMembers,
     newThisWeek,
     participationRate,
     socialActions,
@@ -106,21 +135,40 @@ export async function getDashboardKPIs(): Promise<DashboardKPIs> {
  * Récupère la distribution par genre
  */
 export async function getGenderDistribution(): Promise<GenderDistribution> {
-  const db = await loadDatabase();
+  const { data: reports, error } = await supabase
+    .from('reports')
+    .select(`
+      stats_people(*)
+    `)
+    .eq('status', 'submitted')
+    .order('submitted_at', { ascending: false })
+    .limit(5);
 
-  // Agréger les 5 derniers rapports pour avoir une moyenne
-  const recentStats = db.statsPeople.slice(-5);
+  if (error) {
+    console.error('Error fetching gender distribution:', error);
+    return { men: 0, women: 0, children: 0, total: 0 };
+  }
+
+  const reportList = (reports || []) as any[];
+
+  const recentStats = reportList
+    .map((r) => r.stats_people?.[0] || r.stats_people)
+    .filter((s): s is StatsPeople => !!s);
+
+  if (recentStats.length === 0) {
+    return { men: 0, women: 0, children: 0, total: 0 };
+  }
 
   const men = Math.round(
-    recentStats.reduce((sum, stat) => sum + stat.attendanceMen, 0) /
+    recentStats.reduce((sum: number, stat: StatsPeople) => sum + stat.attendance_men, 0) /
       recentStats.length
   );
   const women = Math.round(
-    recentStats.reduce((sum, stat) => sum + stat.attendanceWomen, 0) /
+    recentStats.reduce((sum: number, stat: StatsPeople) => sum + stat.attendance_women, 0) /
       recentStats.length
   );
   const children = Math.round(
-    recentStats.reduce((sum, stat) => sum + stat.attendanceChildren, 0) /
+    recentStats.reduce((sum: number, stat: StatsPeople) => sum + stat.attendance_children, 0) /
       recentStats.length
   );
 
@@ -136,30 +184,53 @@ export async function getGenderDistribution(): Promise<GenderDistribution> {
  * Récupère la croissance mensuelle sur 12 mois
  */
 export async function getMonthlyGrowth(): Promise<MonthlyGrowth[]> {
-  const db = await loadDatabase();
+  // Fetch reports for the last 12 months
+  // This is complex to do purely in DB with the current structure without a date series join.
+  // We'll fetch all reports and aggregate in JS for simplicity, assuming volume is manageable.
+  // Or fetch last 50 reports.
+  
+  const { data: reports, error } = await supabase
+    .from('reports')
+    .select(`
+      submitted_at,
+      stats_people(*)
+    `)
+    .eq('status', 'submitted')
+    .order('submitted_at', { ascending: false })
+    .limit(50);
 
-  // Créer 12 mois de données (simulation)
+  if (error) {
+    console.error('Error fetching monthly growth:', error);
+    return [];
+  }
+
+  // Group by month
+  const monthlyStats = new Map<string, StatsPeople[]>();
   const months = [
-    'Jan',
-    'Fév',
-    'Mar',
-    'Avr',
-    'Mai',
-    'Jun',
-    'Jul',
-    'Aoû',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Déc',
+    'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+    'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
   ];
 
-  // Grouper les stats par mois (simulation - on prend des échantillons)
-  const monthlyData: MonthlyGrowth[] = months.map((month, index) => {
-    // Prendre des échantillons de statsPeople
-    const sampleStats = db.statsPeople.filter((_, i) => i % 12 === index);
+  reports.forEach(r => {
+    if (!r.submitted_at || !r.stats_people) return;
+    const date = new Date(r.submitted_at);
+    const monthKey = months[date.getMonth()];
+    const stats = Array.isArray(r.stats_people) ? r.stats_people[0] : r.stats_people;
+    
+    if (stats) {
+      if (!monthlyStats.has(monthKey)) {
+        monthlyStats.set(monthKey, []);
+      }
+      monthlyStats.get(monthKey)?.push(stats);
+    }
+  });
 
-    if (sampleStats.length === 0) {
+  // Create result array for last 12 months (or just map the fixed months array as in mock)
+  // Mock mapped all 12 months.
+  
+  return months.map(month => {
+    const stats = monthlyStats.get(month) || [];
+    if (stats.length === 0) {
       return {
         month,
         members: 0,
@@ -170,18 +241,9 @@ export async function getMonthlyGrowth(): Promise<MonthlyGrowth[]> {
     }
 
     const avgStats = {
-      men: Math.round(
-        sampleStats.reduce((sum, s) => sum + s.attendanceMen, 0) /
-          sampleStats.length
-      ),
-      women: Math.round(
-        sampleStats.reduce((sum, s) => sum + s.attendanceWomen, 0) /
-          sampleStats.length
-      ),
-      children: Math.round(
-        sampleStats.reduce((sum, s) => sum + s.attendanceChildren, 0) /
-          sampleStats.length
-      ),
+      men: Math.round(stats.reduce((sum: number, s: StatsPeople) => sum + s.attendance_men, 0) / stats.length),
+      women: Math.round(stats.reduce((sum: number, s: StatsPeople) => sum + s.attendance_women, 0) / stats.length),
+      children: Math.round(stats.reduce((sum: number, s: StatsPeople) => sum + s.attendance_children, 0) / stats.length),
     };
 
     return {
@@ -192,36 +254,48 @@ export async function getMonthlyGrowth(): Promise<MonthlyGrowth[]> {
       children: avgStats.children,
     };
   });
-
-  return monthlyData;
 }
 
 /**
  * Récupère les statistiques financières
  */
 export async function getFinancialStats(): Promise<FinancialStats> {
-  const db = await loadDatabase();
+  // Fetch all financial stats
+  // Note: Aggregation over ALL time might be heavy.
+  // Assuming reasonable dataset size.
+  const { data, error } = await supabase
+    .from('stats_financial')
+    .select('*');
 
-  // Sommer toutes les finances
-  const totalTithes = db.statsFinancial.reduce(
-    (sum, stat) => sum + stat.tithes,
+  if (error) {
+    console.error('Error fetching financial stats:', error);
+    return {
+      tithes: 0,
+      offerings: 0,
+      expenses: 0,
+      balance: 0,
+      currency: 'XAF',
+    };
+  }
+
+  const stats = data || [];
+
+  const totalTithes = stats.reduce((sum, s) => sum + s.tithes, 0);
+  const totalOfferings = stats.reduce(
+    (sum, s) =>
+      sum +
+      s.offerings_general +
+      s.offerings_events +
+      s.offerings_investment,
     0
   );
-  const totalOfferings = db.statsFinancial.reduce(
-    (sum, stat) =>
+  const totalExpenses = stats.reduce(
+    (sum, s) =>
       sum +
-      stat.offeringsGeneral +
-      stat.offeringsEvents +
-      stat.offeringsInvestment,
-    0
-  );
-  const totalExpenses = db.statsFinancial.reduce(
-    (sum, stat) =>
-      sum +
-      stat.expenseAdmin +
-      stat.expenseRent +
-      stat.expenseMission +
-      stat.expenseEvents,
+      s.expense_admin +
+      s.expense_rent +
+      s.expense_mission +
+      s.expense_events,
     0
   );
 
@@ -238,20 +312,22 @@ export async function getFinancialStats(): Promise<FinancialStats> {
  * Récupère les statistiques spirituelles
  */
 export async function getSpiritualStats(): Promise<SpiritualStats> {
-  const db = await loadDatabase();
+  const { data: peopleData, error: peopleError } = await supabase
+    .from('stats_people')
+    .select('baptisms, new_converts');
+    
+  const { data: activityData, error: activityError } = await supabase
+    .from('stats_activities')
+    .select('people_trained');
 
-  const totalBaptisms = db.statsPeople.reduce(
-    (sum, stat) => sum + stat.baptisms,
-    0
-  );
-  const totalNewConverts = db.statsPeople.reduce(
-    (sum, stat) => sum + stat.newConverts,
-    0
-  );
-  const totalTrained = db.statsActivities.reduce(
-    (sum, stat) => sum + stat.peopleTrained,
-    0
-  );
+  if (peopleError || activityError) {
+    console.error('Error fetching spiritual stats:', peopleError || activityError);
+    return { baptisms: 0, newConverts: 0, trainedPeople: 0 };
+  }
+
+  const totalBaptisms = (peopleData || []).reduce((sum, s) => sum + s.baptisms, 0);
+  const totalNewConverts = (peopleData || []).reduce((sum, s) => sum + s.new_converts, 0);
+  const totalTrained = (activityData || []).reduce((sum, s) => sum + s.people_trained, 0);
 
   return {
     baptisms: totalBaptisms,
@@ -264,20 +340,18 @@ export async function getSpiritualStats(): Promise<SpiritualStats> {
  * Récupère les statistiques familiales
  */
 export async function getFamilyStats(): Promise<FamilyStats> {
-  const db = await loadDatabase();
+  const { data, error } = await supabase
+    .from('stats_family')
+    .select('*');
 
-  const totalMarriages = db.statsFamily.reduce(
-    (sum, stat) => sum + stat.marriages,
-    0
-  );
-  const totalBirths = db.statsFamily.reduce(
-    (sum, stat) => sum + stat.births,
-    0
-  );
-  const totalCounseling = db.statsFamily.reduce(
-    (sum, stat) => sum + stat.couplesCounseled,
-    0
-  );
+  if (error) {
+    console.error('Error fetching family stats:', error);
+    return { marriages: 0, births: 0, counselingSessions: 0 };
+  }
+
+  const totalMarriages = (data || []).reduce((sum: number, s: StatsFamily) => sum + s.marriages, 0);
+  const totalBirths = (data || []).reduce((sum: number, s: StatsFamily) => sum + s.births, 0);
+  const totalCounseling = (data || []).reduce((sum: number, s: StatsFamily) => sum + s.couples_counseled, 0);
 
   return {
     marriages: totalMarriages,

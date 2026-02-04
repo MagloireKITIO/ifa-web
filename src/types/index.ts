@@ -4,13 +4,13 @@ export type UserRole = 'admin' | 'center_lead' | 'house_lead' | 'viewer';
 export interface User {
   id: string;
   email: string;
-  fullName: string;
+  full_name: string;
   role: UserRole;
-  centerId: string | null;
-  houseChurchId: string | null;
+  center_id: string | null;
+  house_church_id: string | null;
   avatar?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Types pour la structure organisationnelle
@@ -18,31 +18,31 @@ export interface Zone {
   id: string;
   name: string;
   region: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface Center {
   id: string;
   name: string;
-  zoneId: string;
+  zone_id: string;
   address: string;
-  foundedDate: string;
+  founded_date: string;
   status: 'active' | 'inactive';
   latitude?: number;
   longitude?: number;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface HouseChurch {
   id: string;
   name: string;
-  centerId: string;
-  zoneArea: string;
-  hostName: string;
+  center_id: string;
+  zone_area: string;
+  host_name: string;
   status: 'active' | 'inactive';
   latitude?: number;
   longitude?: number;
-  createdAt: string;
+  created_at: string;
 }
 
 // Types pour le reporting
@@ -51,68 +51,68 @@ export type ReportStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
 export interface ReportingPeriod {
   id: string;
   name: string;
-  startDate: string;
-  endDate: string;
-  isLocked: boolean;
-  fiscalYear: number;
+  start_date: string;
+  end_date: string;
+  is_locked: boolean;
+  fiscal_year: number;
 }
 
 export interface Report {
   id: string;
-  periodId: string;
-  centerId: string | null;
-  houseChurchId: string | null;
-  submittedBy: string;
-  submittedAt: string | null;
+  period_id: string;
+  center_id: string | null;
+  house_church_id: string | null;
+  submitted_by: string;
+  submitted_at: string | null;
   status: ReportStatus;
 }
 
 export interface StatsFinancial {
-  reportId: string;
+  report_id: string;
   currency: string;
   tithes: number;
-  offeringsGeneral: number;
-  offeringsEvents: number;
-  offeringsInvestment: number;
-  expenseAdmin: number;
-  expenseRent: number;
-  expenseMission: number;
-  expenseEvents: number;
+  offerings_general: number;
+  offerings_events: number;
+  offerings_investment: number;
+  expense_admin: number;
+  expense_rent: number;
+  expense_mission: number;
+  expense_events: number;
   notes: string | null;
 }
 
 export interface StatsPeople {
-  reportId: string;
-  attendanceMen: number;
-  attendanceWomen: number;
-  attendanceChildren: number;
-  attendanceTotal: number;
-  newConverts: number;
-  firstTimers: number;
+  report_id: string;
+  attendance_men: number;
+  attendance_women: number;
+  attendance_children: number;
+  attendance_total: number;
+  new_converts: number;
+  first_timers: number;
   baptisms: number;
-  membersActiveStart: number;
-  membersGained: number;
-  membersLost: number;
-  membersActiveEnd: number;
+  members_active_start: number;
+  members_gained: number;
+  members_lost: number;
+  members_active_end: number;
 }
 
 export interface StatsFamily {
-  reportId: string;
+  report_id: string;
   marriages: number;
   engagements: number;
   births: number;
-  couplesCounseled: number;
+  couples_counseled: number;
 }
 
 export interface StatsActivities {
-  reportId: string;
-  peopleTrained: number;
-  pastorsCertified: number;
-  socialActionsCount: number;
-  mealsDistributed: number;
-  youthMentored: number;
-  homeVisits: number;
-  evangelismOutreachCount: number;
+  report_id: string;
+  people_trained: number;
+  pastors_certified: number;
+  social_actions_count: number;
+  meals_distributed: number;
+  youth_mentored: number;
+  home_visits: number;
+  evangelism_outreach_count: number;
 }
 
 // Types pour le sourcing
@@ -123,23 +123,23 @@ export interface SourcingCampaign {
   id: string;
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   status: SourcingCampaignStatus;
   type: string;
-  centerIds: string[];
-  uniqueLink: string;
-  qrCode: string;
+  center_ids: string[];
+  unique_link: string;
+  qr_code: string;
   fields: string[];
-  responsesCount: number;
-  createdAt: string;
-  createdBy: string;
+  responses_count: number;
+  created_at: string;
+  created_by: string;
 }
 
 export interface SourcingResponse {
   id: string;
-  campaignId: string;
-  submittedAt: string;
+  campaign_id: string;
+  submitted_at: string;
   status: SourcingResponseStatus;
   data: Record<string, any>;
 }
@@ -156,25 +156,25 @@ export type NotificationType =
 
 export interface Notification {
   id: string;
-  userId: string;
+  user_id: string;
   type: NotificationType;
   title: string;
   message: string;
-  isRead: boolean;
-  createdAt: string;
-  actionUrl?: string;
+  is_read: boolean;
+  created_at: string;
+  action_url?: string;
 }
 
 // Types pour les logs d'audit
 export interface AuditLog {
   id: string;
-  tableName: string;
-  recordId: string;
+  table_name: string;
+  record_id: string;
   action: 'INSERT' | 'UPDATE' | 'DELETE';
-  oldData: Record<string, any> | null;
-  newData: Record<string, any> | null;
-  performedBy: string;
-  performedAt: string;
+  old_data: Record<string, any> | null;
+  new_data: Record<string, any> | null;
+  performed_by: string;
+  performed_at: string;
 }
 
 // Type pour la base de données complète
@@ -182,15 +182,15 @@ export interface Database {
   users: User[];
   zones: Zone[];
   centers: Center[];
-  houseChurches: HouseChurch[];
-  reportingPeriods: ReportingPeriod[];
+  house_churches: HouseChurch[];
+  reporting_periods: ReportingPeriod[];
   reports: Report[];
-  statsFinancial: StatsFinancial[];
-  statsPeople: StatsPeople[];
-  statsFamily: StatsFamily[];
-  statsActivities: StatsActivities[];
-  sourcingCampaigns: SourcingCampaign[];
-  sourcingResponses: SourcingResponse[];
+  stats_financial: StatsFinancial[];
+  stats_people: StatsPeople[];
+  stats_family: StatsFamily[];
+  stats_activities: StatsActivities[];
+  sourcing_campaigns: SourcingCampaign[];
+  sourcing_responses: SourcingResponse[];
   notifications: Notification[];
-  auditLogs: AuditLog[];
+  audit_logs: AuditLog[];
 }

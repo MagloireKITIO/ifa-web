@@ -25,8 +25,9 @@ export default function LoginPage() {
       await login(email, password);
       // Redirection vers le dashboard
       router.push('/dashboard');
-    } catch (err) {
-      setError('Email ou mot de passe incorrect');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
     }
@@ -172,7 +173,7 @@ export default function LoginPage() {
             ))}
           </div>
           <p className="text-[10px] text-muted-foreground mt-3 text-center">
-            Mot de passe : n'importe quoi fonctionne pour le prototype
+            Mot de passe : password123 (pour tous les comptes de test)
           </p>
         </div>
       </div>

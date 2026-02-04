@@ -116,12 +116,12 @@ export function TopNavigation() {
                   {user.avatar ? (
                     <img
                       src={user.avatar}
-                      alt={user.fullName}
+                      alt={user.full_name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
-                      {user.fullName
+                      {user.full_name
                         .split(' ')
                         .map((n) => n[0])
                         .join('')
@@ -131,13 +131,13 @@ export function TopNavigation() {
                   )}
                 </Avatar>
                 <span className="text-sm font-medium text-foreground hidden md:block">
-                  {user.fullName.split(' ')[0]}
+                  {user.full_name.split(' ')[0]}
                 </span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{user.fullName}</p>
+                <p className="text-sm font-medium">{user.full_name}</p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
                 <p className="text-xs text-muted-foreground mt-1 capitalize">
                   {user.role.replace('_', ' ')}
