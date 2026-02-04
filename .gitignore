@@ -53,3 +53,7 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# Project specific
+Raw_Data/
+TechDocs&Progress/
