@@ -94,7 +94,7 @@ export function MemberContributionList({
 
   // Filtrage des membres
   const filteredMembers = members.filter((member) => {
-    const matchesSearch = member.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = member.full_name.toLowerCase().includes(searchQuery.toLowerCase());
     const contribution = getContribution(member.id);
 
     if (filter === 'contributed') {
@@ -211,10 +211,10 @@ export function MemberContributionList({
               {/* Info membre */}
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground truncate">
-                  {member.fullName}
+                  {member.full_name}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {member.phone} • {member.spiritualStatus}
+                  {member.phone} • {member.is_baptized ? 'Baptisé' : 'Non baptisé'}
                 </p>
               </div>
 

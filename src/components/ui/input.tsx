@@ -2,7 +2,13 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, value, ...props }: React.ComponentProps<"input">) {
+  // Convertir null/undefined en chaîne vide pour éviter les warnings React
+  // Seulement si value est explicitement passé dans les props
+  const inputProps = value !== undefined
+    ? { value: value === null ? '' : value }
+    : {};
+
   return (
     <input
       type={type}
@@ -13,6 +19,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className
       )}
+      {...inputProps}
       {...props}
     />
   )

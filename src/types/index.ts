@@ -9,6 +9,7 @@ export interface User {
   center_id: string | null;
   house_church_id: string | null;
   avatar?: string;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }

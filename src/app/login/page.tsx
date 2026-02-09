@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { getHomePageForRole, type UserRole } from '@/lib/permissions';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,9 +23,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      // Redirection vers le dashboard
-      router.push('/dashboard');
+      const loggedInUser = await login(email, password);
+      // Rediriger vers la page appropriée selon le rôle
+      const homePage = getHomePageForRole(loggedInUser.role as UserRole);
+      router.push(homePage);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Email ou mot de passe incorrect');
@@ -35,9 +37,9 @@ export default function LoginPage() {
 
   // Comptes de test pour faciliter les tests
   const testAccounts = [
-    { email: 'admin@ifa.org', role: 'Administrateur' },
-    { email: 'paul.ngono@ifa.org', role: 'Centre Leader' },
-    { email: 'marie.ngo@ifa.org', role: 'House Leader' },
+    { email: 'admin@ifa.org', role: 'Administrateur', password: 'password123' },
+    { email: 'center@ifa.cm', role: 'Centre Leader - BONAMOUSSADI', password: 'password123' },
+    { email: 'house@ifa.cm', role: 'House Leader - MEKOULOU M', password: 'password123' },
   ];
 
   return (
@@ -48,20 +50,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo et titre */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+          <div className="inline-flex items-center justify-center mb-4">
+            <img
+              src="/logo.png"
+              alt="IFA Logo"
+              className="w-24 h-24 object-contain"
+            />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight mb-2">
             Integrity For All
@@ -159,7 +153,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   setEmail(account.email);
-                  setPassword('password');
+                  setPassword(account.password);
                 }}
                 className="w-full text-left px-3 py-2 rounded-md bg-background hover:bg-accent transition-colors duration-150 group"
               >

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { TopNavigation } from '@/components/layout/TopNavigation';
@@ -12,7 +12,9 @@ import { Step2Financial, type FinancialData } from '@/components/rapports/steps/
 import { Step3People, type PeopleData } from '@/components/rapports/steps/Step3People';
 import { Step4Family, type FamilyData } from '@/components/rapports/steps/Step4Family';
 import { Step5Activities, type ActivitiesData } from '@/components/rapports/steps/Step5Activities';
-import { getOpenPeriods } from '@/lib/api/reports';
+import { PeriodSelector } from '@/components/rapports/PeriodSelector';
+import { createReport } from '@/lib/api/reports';
+import { checkReportExists } from '@/lib/api/periods';
 
 type FormData = {
   periodId: string;
@@ -34,8 +36,10 @@ export default function NouveauRapportPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [periods, setPeriods] = useState<any[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedPeriodName, setSelectedPeriodName] = useState('');
+  const [reportExistsForPeriod, setReportExistsForPeriod] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     periodId: '',
@@ -85,16 +89,20 @@ export default function NouveauRapportPage() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    async function loadPeriods() {
-      const openPeriods = await getOpenPeriods();
-      setPeriods(openPeriods);
-      if (openPeriods.length > 0 && !formData.periodId) {
-        setFormData((prev) => ({ ...prev, periodId: openPeriods[0].id }));
-      }
+  const handlePeriodChange = useCallback(async (periodId: string, periodName: string) => {
+    setFormData((prev) => ({ ...prev, periodId }));
+    setSelectedPeriodName(periodName);
+
+    // Vérifier si un rapport existe pour cette période
+    if (user) {
+      const exists = await checkReportExists(
+        periodId,
+        user.role === 'center_lead' ? user.center_id || undefined : undefined,
+        user.role === 'house_lead' ? user.house_church_id || undefined : undefined
+      );
+      setReportExistsForPeriod(exists);
     }
-    loadPeriods();
-  }, []);
+  }, [user]);
 
   if (loading || !user) {
     return (
@@ -110,13 +118,13 @@ export default function NouveauRapportPage() {
     return (
       <div className="min-h-screen bg-[#FAFAFA]">
         <TopNavigation />
-        <div className="max-w-4xl mx-auto px-6 py-12 text-center">
-          <Card className="p-8">
-            <h1 className="text-2xl font-bold mb-4">Accès Non Autorisé</h1>
-            <p className="text-muted-foreground mb-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center">
+          <Card className="p-6 sm:p-8">
+            <h1 className="text-xl sm:text-2xl font-bold mb-4">Accès Non Autorisé</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6">
               Seuls les responsables de centres et de cellules peuvent soumettre des rapports.
             </p>
-            <Button onClick={() => router.push('/rapports')}>
+            <Button onClick={() => router.push('/rapports')} className="min-h-[44px]">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour aux Rapports
             </Button>
@@ -168,9 +176,68 @@ export default function NouveauRapportPage() {
   };
 
   const handleSubmit = async () => {
-    // TODO: Implémenter la soumission du rapport
-    alert('Fonctionnalité de soumission en cours de développement.\n\nLes données du formulaire :\n' + JSON.stringify(formData, null, 2));
-    router.push('/rapports');
+    if (!user) return;
+
+    setSubmitting(true);
+
+    try {
+      const result = await createReport({
+        periodId: formData.periodId,
+        userId: user.id,
+        centerId: user.role === 'center_lead' ? user.center_id || undefined : undefined,
+        houseChurchId: user.role === 'house_lead' ? user.house_church_id || undefined : undefined,
+        financial: {
+          tithes: formData.financial.tithes,
+          offeringsGeneral: formData.financial.offeringsGeneral,
+          offeringsEvents: formData.financial.offeringsEvents,
+          offeringsInvestment: formData.financial.offeringsInvestment,
+          expenseAdmin: formData.financial.expenseAdmin,
+          expenseRent: formData.financial.expenseRent,
+          expenseMission: formData.financial.expenseMission,
+          expenseEvents: formData.financial.expenseEvents,
+          notes: formData.financial.notes,
+        },
+        people: {
+          attendanceMen: formData.people.attendanceMen,
+          attendanceWomen: formData.people.attendanceWomen,
+          attendanceChildren: formData.people.attendanceChildren,
+          newConverts: formData.people.newConverts,
+          firstTimers: formData.people.firstTimers,
+          baptisms: formData.people.baptisms,
+          membersActiveStart: formData.people.membersActiveStart,
+          membersGained: formData.people.membersGained,
+          membersLost: formData.people.membersLost,
+        },
+        family: {
+          marriages: formData.family.marriages,
+          engagements: formData.family.engagements,
+          births: formData.family.births,
+          couplesCounseled: formData.family.couplesCounseled,
+        },
+        activities: {
+          peopleTrained: formData.activities.peopleTrained,
+          pastorsCertified: formData.activities.pastorsCertified,
+          socialActionsCount: formData.activities.socialActionsCount,
+          mealsDistributed: formData.activities.mealsDistributed,
+          youthMentored: formData.activities.youthMentored,
+          homeVisits: formData.activities.homeVisits,
+          evangelismOutreachCount: formData.activities.evangelismOutreachCount,
+        },
+        memberContributions: formData.financial.memberContributions,
+      });
+
+      if (result.success) {
+        alert('✅ Rapport soumis avec succès !');
+        router.push('/rapports');
+      } else {
+        alert('❌ Erreur : ' + (result.error || 'Impossible de soumettre le rapport'));
+      }
+    } catch (error: any) {
+      console.error('Error submitting report:', error);
+      alert('❌ Erreur : ' + (error.message || 'Erreur inconnue'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const progressPercent = (currentStep / STEPS.length) * 100;
@@ -179,38 +246,42 @@ export default function NouveauRapportPage() {
     <div className="min-h-screen bg-[#FAFAFA]">
       <TopNavigation />
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* En-tête avec progression */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Button
             variant="ghost"
             onClick={() => router.push('/rapports')}
-            className="mb-4"
+            className="mb-4 min-h-[44px]"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux Rapports
+            <span className="hidden sm:inline">Retour aux Rapports</span>
+            <span className="sm:hidden">Retour</span>
           </Button>
 
-          <h1 className="text-3xl font-bold mb-2">Nouveau Rapport Mensuel</h1>
-          <p className="text-muted-foreground mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+            Nouveau Rapport Mensuel
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
             Étape {currentStep} sur {STEPS.length} : {STEPS[currentStep - 1].title}
           </p>
 
-          <div className="space-y-2">
-            <Progress value={progressPercent} className="h-2" />
-            <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="space-y-2 sm:space-y-3">
+            <Progress value={progressPercent} className="h-2 sm:h-3" />
+            <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
               {STEPS.map((step) => (
                 <span
                   key={step.id}
-                  className={
+                  className={`text-center ${
                     step.id === currentStep
                       ? 'font-semibold text-primary'
                       : step.id < currentStep
                       ? 'text-green-600'
                       : ''
-                  }
+                  }`}
                 >
-                  {step.name}
+                  <span className="hidden sm:inline">{step.name}</span>
+                  <span className="sm:hidden">{step.id}</span>
                 </span>
               ))}
             </div>
@@ -218,50 +289,31 @@ export default function NouveauRapportPage() {
         </div>
 
         {/* Contenu de l'étape */}
-        <Card className="p-8 mb-6">
+        <Card className="p-4 sm:p-6 lg:p-8 mb-6">
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-2">Sélection de la Période</h2>
-              <p className="text-muted-foreground mb-4">
-                Choisissez la période pour laquelle vous souhaitez soumettre un rapport
-              </p>
+            <div className="space-y-4 sm:space-y-6">
+              <PeriodSelector
+                selectedPeriodId={formData.periodId}
+                onPeriodChange={handlePeriodChange}
+                centerId={user.role === 'center_lead' ? user.center_id || undefined : undefined}
+                houseChurchId={user.role === 'house_lead' ? user.house_church_id || undefined : undefined}
+              />
 
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="text-sm font-medium mb-2 block">
-                    Période de reporting
-                  </span>
-                  <select
-                    value={formData.periodId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, periodId: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    {periods.map((period) => (
-                      <option key={period.id} value={period.id}>
-                        {period.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              {user.role === 'house_lead' && user.house_church_id && (
+                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs sm:text-sm">
+                    💡 <strong>Cellule :</strong> Vous soumettez un rapport pour votre assemblée de maison
+                  </p>
+                </div>
+              )}
 
-                {user.role === 'house_lead' && user.house_church_id && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm">
-                      <strong>Cellule :</strong> Vous soumettez un rapport pour votre house church
-                    </p>
-                  </div>
-                )}
-
-                {user.role === 'center_lead' && user.center_id && (
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-sm">
-                      <strong>Centre :</strong> Vous soumettez un rapport pour votre centre
-                    </p>
-                  </div>
-                )}
-              </div>
+              {user.role === 'center_lead' && user.center_id && (
+                <div className="p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs sm:text-sm">
+                    💡 <strong>Centre :</strong> Vous soumettez un rapport pour votre centre
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -301,24 +353,39 @@ export default function NouveauRapportPage() {
         </Card>
 
         {/* Boutons de navigation */}
-        <div className="flex justify-between">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
           <Button
             variant="outline"
             onClick={handlePrevious}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || submitting}
+            className="w-full sm:w-auto order-2 sm:order-1 min-h-[48px]"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Précédent
           </Button>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => alert('Sauvegarde en brouillon...')}>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 order-1 sm:order-2">
+            <Button
+              variant="outline"
+              onClick={() => alert('Sauvegarde en brouillon...')}
+              disabled={submitting}
+              className="w-full sm:w-auto min-h-[48px]"
+            >
               <Save className="w-4 h-4 mr-2" />
               Sauvegarder
             </Button>
 
-            <Button onClick={handleNext}>
-              {currentStep < STEPS.length ? (
+            <Button
+              onClick={handleNext}
+              disabled={submitting || (currentStep === 1 && reportExistsForPeriod)}
+              className="w-full sm:w-auto min-h-[48px]"
+            >
+              {submitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Soumission...
+                </>
+              ) : currentStep < STEPS.length ? (
                 <>
                   Suivant
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -326,7 +393,8 @@ export default function NouveauRapportPage() {
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Soumettre le Rapport
+                  <span className="hidden sm:inline">Soumettre le Rapport</span>
+                  <span className="sm:hidden">Soumettre</span>
                 </>
               )}
             </Button>

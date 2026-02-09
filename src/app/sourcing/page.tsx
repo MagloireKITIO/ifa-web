@@ -4,13 +4,24 @@ import { useRouter } from 'next/navigation';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, ExternalLink, Copy, QrCode } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Copy, QrCode, Power, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function SourcingPage() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [publicFormUrl, setPublicFormUrl] = useState('');
+
+  // États pour le toggle de sourcing
+  const [isSourcingEnabled, setIsSourcingEnabled] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  // Charger la configuration du sourcing
+  useEffect(() => {
+    loadSourcingConfig();
+  }, []);
 
   // Générer l'URL du formulaire public côté client uniquement
   useEffect(() => {
@@ -18,6 +29,48 @@ export default function SourcingPage() {
       setPublicFormUrl(`${window.location.origin}/sourcing/public`);
     }
   }, []);
+
+  const loadSourcingConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sourcing_config')
+        .select('is_enabled')
+        .limit(1)
+        .single();
+
+      if (data) {
+        setIsSourcingEnabled(data.is_enabled);
+      }
+    } catch (err) {
+      console.error('Error loading sourcing config:', err);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  const toggleSourcing = async () => {
+    setIsToggling(true);
+    try {
+      const newStatus = !isSourcingEnabled;
+
+      const { error } = await supabase
+        .from('sourcing_config')
+        .update({
+          is_enabled: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await supabase.from('sourcing_config').select('id').single()).data?.id);
+
+      if (error) throw error;
+
+      setIsSourcingEnabled(newStatus);
+    } catch (err) {
+      console.error('Error toggling sourcing:', err);
+      alert('Erreur lors de la mise à jour. Veuillez réessayer.');
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicFormUrl);
@@ -31,13 +84,57 @@ export default function SourcingPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* En-tête */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Formulaire de Sourcing
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Partagez ce formulaire pour collecter les informations des membres
-            et visiteurs
-          </p>
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                Formulaire de Sourcing
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Partagez ce formulaire pour collecter les informations des membres
+                et visiteurs
+              </p>
+            </div>
+          </div>
+
+          {/* Toggle Activer/Désactiver */}
+          <Card className={`p-4 border-2 ${isSourcingEnabled ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${isSourcingEnabled ? 'bg-green-100' : 'bg-red-100'}`}>
+                  <Power className={`h-5 w-5 ${isSourcingEnabled ? 'text-green-600' : 'text-red-600'}`} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">
+                    Formulaire {isSourcingEnabled ? 'Activé' : 'Désactivé'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isSourcingEnabled
+                      ? 'Les membres peuvent soumettre leurs informations'
+                      : 'Le formulaire public est temporairement fermé'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Switch Toggle */}
+              <button
+                onClick={toggleSourcing}
+                disabled={isToggling || loadingConfig}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  isSourcingEnabled ? 'bg-green-600' : 'bg-gray-300'
+                } ${isToggling || loadingConfig ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isSourcingEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+                {isToggling && (
+                  <Loader2 className="absolute right-1 h-3 w-3 text-white animate-spin" />
+                )}
+              </button>
+            </div>
+          </Card>
         </div>
 
         {/* Card avec lien du formulaire */}

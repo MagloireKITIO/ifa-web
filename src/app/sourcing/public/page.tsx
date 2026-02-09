@@ -1,274 +1,255 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CheckCircle, Home, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { SourcingWelcome } from '@/components/sourcing/SourcingWelcome';
-import { SourcingProgress } from '@/components/sourcing/SourcingProgress';
-import { SourcingSuccess } from '@/components/sourcing/SourcingSuccess';
-import { Step1PersonalInfo } from '@/components/sourcing/steps/Step1PersonalInfo';
-import { Step2Address } from '@/components/sourcing/steps/Step2Address';
-import { Step3Family } from '@/components/sourcing/steps/Step3Family';
-import { Step4Spiritual } from '@/components/sourcing/steps/Step4Spiritual';
-import { Step5Attachment } from '@/components/sourcing/steps/Step5Attachment';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import {
-  SourcingFormData,
-  initialFormData,
-  formSteps,
-} from '@/types/sourcing';
+import { MemberSearchForm } from '@/components/sourcing/MemberSearchForm';
+import { MemberCompletionForm } from '@/components/sourcing/MemberCompletionForm';
+import type { MemberWithCompletion } from '@/lib/api/sourcing';
+import { supabase } from '@/lib/supabase';
 
-type FormScreen = 'welcome' | 'form' | 'success';
+type Step = 'search' | 'form' | 'success';
 
-export default function SourcingPublicPage() {
-  const [screen, setScreen] = useState<FormScreen>('welcome');
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData, clearFormData, isLoaded] = useLocalStorage<SourcingFormData>(
-    'ifa_sourcing_form_data',
-    initialFormData
-  );
-  const [errors, setErrors] = useState<Record<string, string>>({});
+export default function PublicSourcingPage() {
+  const [currentStep, setCurrentStep] = useState<Step>('search');
+  const [selectedMember, setSelectedMember] = useState<MemberWithCompletion | null>(null);
 
-  // Fonction pour mettre à jour un champ
-  const updateField = (field: keyof SourcingFormData, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    // Effacer l'erreur du champ si elle existe
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
+  // Vérification si le sourcing est activé
+  const [isSourcingEnabled, setIsSourcingEnabled] = useState(true);
+  const [disabledMessage, setDisabledMessage] = useState('');
+  const [loadingConfig, setLoadingConfig] = useState(true);
 
-  // Validation par étape
-  const validateStep = (step: number): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    switch (step) {
-      case 1: // Informations Personnelles
-        if (!formData.fullName.trim()) {
-          newErrors.fullName = 'Le nom complet est requis';
-        }
-        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          newErrors.email = 'Email invalide';
-        }
-        if (!formData.phone.trim()) {
-          newErrors.phone = 'Le numéro de téléphone est requis';
-        }
-        if (!formData.dateOfBirth) {
-          newErrors.dateOfBirth = 'La date de naissance est requise';
-        } else {
-          const birthDate = new Date(formData.dateOfBirth);
-          if (birthDate > new Date()) {
-            newErrors.dateOfBirth = 'La date ne peut pas être dans le futur';
-          }
-        }
-        if (!formData.gender) {
-          newErrors.gender = 'Le genre est requis';
-        }
-        break;
-
-      case 2: // Adresse
-        if (!formData.address.trim()) {
-          newErrors.address = 'L\'adresse est requise';
-        }
-        break;
-
-      case 3: // Informations Familiales
-        if (!formData.maritalStatus) {
-          newErrors.maritalStatus = 'La situation familiale est requise';
-        }
-        if (formData.hasChildren && formData.numberOfChildren < 1) {
-          newErrors.numberOfChildren = 'Le nombre d\'enfants doit être au moins 1';
-        }
-        break;
-
-      case 4: // Informations Spirituelles
-        if (!formData.spiritualStatus) {
-          newErrors.spiritualStatus = 'Le statut spirituel est requis';
-        }
-        if (formData.isBaptized && !formData.baptismDate) {
-          newErrors.baptismDate = 'La date de baptême est requise';
-        }
-        break;
-
-      case 5: // Attachement
-        if (!formData.centerId) {
-          newErrors.centerId = 'Le centre est requis';
-        }
-        if (!formData.houseChurchId) {
-          newErrors.houseChurchId = 'La cellule est requise';
-        }
-        break;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Navigation
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      if (currentStep < 5) {
-        setCurrentStep((prev) => prev + 1);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        // Soumission finale
-        handleSubmit();
-      }
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  // Soumission du formulaire
-  const handleSubmit = async () => {
-    try {
-      // Ici on enverrait les données au backend
-      // Pour le prototype, on simule juste un délai
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log('Données soumises:', formData);
-
-      // Passer à l'écran de succès
-      setScreen('success');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error) {
-      console.error('Erreur soumission:', error);
-      alert('Erreur lors de la soumission. Veuillez réessayer.');
-    }
-  };
-
-  // Soumettre une autre réponse
-  const handleSubmitAnother = () => {
-    clearFormData();
-    setCurrentStep(1);
-    setScreen('welcome');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Gestion du clavier (Enter pour suivant)
+  // Charger la configuration au montage
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && screen === 'form') {
-        e.preventDefault();
-        handleNext();
+    checkSourcingStatus();
+  }, []);
+
+  const checkSourcingStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_sourcing_config');
+
+      if (data && data.length > 0) {
+        setIsSourcingEnabled(data[0].is_enabled);
+        setDisabledMessage(data[0].disabled_message || 'Le formulaire est temporairement désactivé.');
       }
-    };
+    } catch (err) {
+      console.error('Error checking sourcing status:', err);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
 
-    window.addEventListener('keypress', handleKeyPress);
-    return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [screen, currentStep, formData]);
+  const handleMemberSelect = (member: MemberWithCompletion | null) => {
+    setSelectedMember(member);
+    setCurrentStep('form');
+  };
 
-  // Écran de bienvenue
-  if (screen === 'welcome') {
-    return <SourcingWelcome onStart={() => setScreen('form')} />;
-  }
+  const handleCreateNew = () => {
+    setSelectedMember(null);
+    setCurrentStep('form');
+  };
 
-  // Écran de succès
-  if (screen === 'success') {
-    const firstName = formData.fullName.split(' ')[0];
+  const handleBack = () => {
+    setSelectedMember(null);
+    setCurrentStep('search');
+  };
+
+  const handleSuccess = () => {
+    setCurrentStep('success');
+  };
+
+  const handleReset = () => {
+    setSelectedMember(null);
+    setCurrentStep('search');
+  };
+
+  // Loading state
+  if (loadingConfig) {
     return (
-      <SourcingSuccess
-        firstName={firstName}
-        onSubmitAnother={handleSubmitAnother}
-      />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
     );
   }
 
-  // Écran du formulaire
-  const stepData = formSteps[currentStep - 1];
+  // Sourcing désactivé
+  if (!isSourcingEnabled) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">IFA - Complétion de Profil</h1>
+                <p className="text-sm text-gray-600 mt-1">Integrity For All</p>
+              </div>
+              <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center">
+                <Home className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </header>
 
-  return (
-    <div className="min-h-screen bg-[#FAFAFA]">
-      {/* Barre de progression */}
-      <SourcingProgress currentStep={currentStep} totalSteps={5} />
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="text-center space-y-6 py-8">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="h-10 w-10 text-orange-600" />
+                </div>
+              </div>
 
-      {/* Contenu du formulaire */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        {/* En-tête de l'étape */}
-        <div className="mb-6 sm:mb-8">
-          <p className="text-sm text-muted-foreground mb-2">
-            Étape {stepData.number} sur 5
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            {stepData.title}
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">{stepData.description}</p>
-        </div>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-gray-900">
+                  Formulaire Temporairement Fermé
+                </h2>
+                <p className="text-lg text-gray-600">
+                  {disabledMessage}
+                </p>
+              </div>
 
-        {/* Composant de l'étape actuelle */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 md:p-8 shadow-md mb-6 sm:mb-8">
-          {currentStep === 1 && (
-            <Step1PersonalInfo
-              formData={formData}
-              updateField={updateField}
-              errors={errors}
-            />
-          )}
-          {currentStep === 2 && (
-            <Step2Address
-              formData={formData}
-              updateField={updateField}
-              errors={errors}
-            />
-          )}
-          {currentStep === 3 && (
-            <Step3Family
-              formData={formData}
-              updateField={updateField}
-              errors={errors}
-            />
-          )}
-          {currentStep === 4 && (
-            <Step4Spiritual
-              formData={formData}
-              updateField={updateField}
-              errors={errors}
-            />
-          )}
-          {currentStep === 5 && (
-            <Step5Attachment
-              formData={formData}
-              updateField={updateField}
-              errors={errors}
-            />
-          )}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Précédent
-          </Button>
-
-          <Button onClick={handleNext} size="lg" className="px-8">
-            {currentStep === 5 ? 'Soumettre' : 'Suivant'}
-            {currentStep < 5 && <ArrowRight className="w-4 h-4 ml-2" />}
-          </Button>
-        </div>
-
-        {/* Indicateur auto-save */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Vos réponses sont sauvegardées automatiquement
-        </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
+                <h3 className="font-semibold text-blue-900 mb-3">Que faire?</h3>
+                <ul className="space-y-2 text-blue-700">
+                  <li className="flex items-start">
+                    <span className="font-semibold mr-2">•</span>
+                    <span>Réessayez plus tard</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-semibold mr-2">•</span>
+                    <span>Contactez votre responsable d'assemblée</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-semibold mr-2">•</span>
+                    <span>Appelez le secrétariat de l'église</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
+    );
+  }
+
+  // Formulaire actif
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">IFA - Complétion de Profil</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Integrity For All
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center">
+              <Home className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          {/* Étape 1 : Recherche */}
+          {currentStep === 'search' && (
+            <MemberSearchForm
+              onMemberSelect={handleMemberSelect}
+              onCreateNew={handleCreateNew}
+            />
+          )}
+
+          {/* Étape 2 : Formulaire */}
+          {currentStep === 'form' && (
+            <MemberCompletionForm
+              member={selectedMember}
+              onBack={handleBack}
+              onSuccess={handleSuccess}
+            />
+          )}
+
+          {/* Étape 3 : Succès */}
+          {currentStep === 'success' && (
+            <div className="text-center space-y-6 py-8">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-10 w-10 text-green-600" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-gray-900">
+                  Merci pour votre soumission !
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Votre profil a été envoyé avec succès
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
+                <h3 className="font-semibold text-blue-900 mb-3">Prochaines étapes</h3>
+                <ul className="space-y-2 text-blue-700">
+                  <li className="flex items-start">
+                    <span className="font-semibold mr-2">1.</span>
+                    <span>
+                      Votre soumission sera examinée par un administrateur de l'église
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-semibold mr-2">2.</span>
+                    <span>
+                      Une fois validée, vos informations seront mises à jour dans notre système
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-semibold mr-2">3.</span>
+                    <span>
+                      Vous serez contacté par téléphone si des clarifications sont nécessaires
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-green-800 text-sm">
+                  <strong>Important :</strong> Si vous avez fourni un numéro de téléphone,
+                  assurez-vous qu'il est correct pour que nous puissions vous contacter.
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <Button onClick={handleReset} size="lg" className="px-8">
+                  <Home className="mr-2 h-5 w-5" />
+                  Retour à l'accueil
+                </Button>
+              </div>
+
+              <div className="pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-500">
+                  Vous avez une question ? Contactez votre responsable d'assemblée ou le
+                  secrétariat de l'église.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>© 2026 Integrity For All</p>
+          <p className="mt-1">
+            Cette page est sécurisée et vos données sont protégées
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

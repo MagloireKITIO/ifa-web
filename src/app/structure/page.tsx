@@ -3,23 +3,69 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useToast } from '@/components/ui/toast';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { MapView } from '@/components/structure/MapView';
+import { ZoneDialog } from '@/components/structure/ZoneDialog';
+import { CenterDialog } from '@/components/structure/CenterDialog';
+import { HouseChurchDialog } from '@/components/structure/HouseChurchDialog';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getCenters, getZones, getHouseChurches } from '@/lib/api/structure';
-import { Map as MapIcon, List, MapPin, Building2, Home } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+  getCenters,
+  getZones,
+  getHouseChurches,
+  createZone,
+  createCenter,
+  createHouseChurch,
+  updateZone,
+  updateCenter,
+  updateHouseChurch,
+  deleteZone,
+  deleteCenter,
+  deleteHouseChurch,
+} from '@/lib/api/structure';
+import {
+  Map as MapIcon,
+  List,
+  MapPin,
+  Building2,
+  Home,
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+} from 'lucide-react';
 import type { Center, HouseChurch, Zone } from '@/types';
 
 export default function StructurePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { showToast } = useToast();
+
   const [view, setView] = useState<'map' | 'list'>('map');
   const [centers, setCenters] = useState<Center[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [houseChurches, setHouseChurches] = useState<HouseChurch[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedZone, setSelectedZone] = useState<string>('all');
+
+  // Dialog states
+  const [zoneDialog, setZoneDialog] = useState<{ open: boolean; zone?: Zone | null }>({
+    open: false,
+    zone: null,
+  });
+  const [centerDialog, setCenterDialog] = useState<{ open: boolean; center?: Center | null }>({
+    open: false,
+    center: null,
+  });
+  const [houseDialog, setHouseDialog] = useState<{ open: boolean; house?: HouseChurch | null }>({
+    open: false,
+    house: null,
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -27,29 +73,148 @@ export default function StructurePage() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    async function loadStructureData() {
-      try {
-        setDataLoading(true);
-        const [allCenters, allZones, allHouseChurches] = await Promise.all([
-          getCenters(),
-          getZones(),
-          getHouseChurches(),
-        ]);
-        setCenters(allCenters);
-        setZones(allZones);
-        setHouseChurches(allHouseChurches);
-      } catch (error) {
-        console.error('Erreur chargement structure:', error);
-      } finally {
-        setDataLoading(false);
-      }
+  const loadStructureData = async () => {
+    try {
+      setDataLoading(true);
+      const [allCenters, allZones, allHouseChurches] = await Promise.all([
+        getCenters(),
+        getZones(),
+        getHouseChurches(),
+      ]);
+      setCenters(allCenters);
+      setZones(allZones);
+      setHouseChurches(allHouseChurches);
+    } catch (error) {
+      console.error('Erreur chargement structure:', error);
+      showToast('error', 'Erreur lors du chargement des données');
+    } finally {
+      setDataLoading(false);
     }
+  };
 
+  useEffect(() => {
     if (user) {
       loadStructureData();
     }
   }, [user]);
+
+  // CRUD Handlers
+  const handleCreateZone = async (data: { name: string; region: string }) => {
+    const result = await createZone(data);
+    if (result) {
+      showToast('success', 'Zone créée avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', 'Erreur lors de la création de la zone');
+    }
+  };
+
+  const handleUpdateZone = async (data: { name: string; region: string }) => {
+    if (!zoneDialog.zone) return;
+    const result = await updateZone(zoneDialog.zone.id, data);
+    if (result) {
+      showToast('success', 'Zone mise à jour avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', 'Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDeleteZone = async (zoneId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) return;
+    const result = await deleteZone(zoneId);
+    if (result.success) {
+      showToast('success', 'Zone supprimée avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', result.error || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleCreateCenter = async (data: any) => {
+    const result = await createCenter(data);
+    if (result) {
+      showToast('success', 'Centre créé avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', 'Erreur lors de la création du centre');
+    }
+  };
+
+  const handleUpdateCenter = async (data: any) => {
+    if (!centerDialog.center) return;
+    const result = await updateCenter(centerDialog.center.id, data);
+    if (result) {
+      showToast('success', 'Centre mis à jour avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', 'Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDeleteCenter = async (centerId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce centre ?')) return;
+    const result = await deleteCenter(centerId);
+    if (result.success) {
+      showToast('success', 'Centre supprimé avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', result.error || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleCreateHouseChurch = async (data: any) => {
+    const result = await createHouseChurch(data);
+    if (result) {
+      showToast('success', 'Cellule créée avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', 'Erreur lors de la création de la cellule');
+    }
+  };
+
+  const handleUpdateHouseChurch = async (data: any) => {
+    if (!houseDialog.house) return;
+    const result = await updateHouseChurch(houseDialog.house.id, data);
+    if (result) {
+      showToast('success', 'Cellule mise à jour avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', 'Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDeleteHouseChurch = async (houseId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette cellule ?')) return;
+    const result = await deleteHouseChurch(houseId);
+    if (result.success) {
+      showToast('success', 'Cellule supprimée avec succès');
+      loadStructureData();
+    } else {
+      showToast('error', result.error || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleCenterClick = (centerId: string) => {
+    router.push(`/structure/centres/${centerId}`);
+  };
+
+  // Filtering
+  const filteredZones = zones.filter((zone) =>
+    zone.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredCenters =
+    selectedZone === 'all'
+      ? centers.filter((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      : centers.filter(
+          (c) => c.zone_id === selectedZone && c.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+  const activeCenters = centers.filter((c) => c.status === 'active').length;
+  const activeHouseChurches = houseChurches.filter((h) => h.status === 'active').length;
+
+  const canEdit = user?.role === 'admin' || user?.role === 'center_lead';
 
   if (loading || !user) {
     return (
@@ -59,108 +224,165 @@ export default function StructurePage() {
     );
   }
 
-  const handleCenterClick = (centerId: string) => {
-    router.push(`/structure/centres/${centerId}`);
-  };
-
-  const activeCenters = centers.filter((c) => c.status === 'active').length;
-  const activeHouseChurches = houseChurches.filter((h) => h.status === 'active').length;
-
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <TopNavigation />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* En-tête */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Structure de l'Église IFA
-          </h1>
-          <p className="text-muted-foreground">
-            Carte géographique des centres et cellules
-          </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* En-tête avec boutons d'action */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">
+                Structure de l'Église IFA
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Carte géographique des centres et cellules
+              </p>
+            </div>
+
+            {canEdit && (
+              <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
+                <Button
+                  onClick={() => setZoneDialog({ open: true, zone: null })}
+                  size="sm"
+                  className="flex-1 sm:flex-initial min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouvelle Zone</span>
+                  <span className="sm:hidden">Zone</span>
+                </Button>
+                <Button
+                  onClick={() => setCenterDialog({ open: true, center: null })}
+                  size="sm"
+                  className="flex-1 sm:flex-initial min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouveau Centre</span>
+                  <span className="sm:hidden">Centre</span>
+                </Button>
+                <Button
+                  onClick={() => setHouseDialog({ open: true, house: null })}
+                  size="sm"
+                  className="flex-1 sm:flex-initial min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouvelle Cellule</span>
+                  <span className="sm:hidden">Cellule</span>
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Statistiques Globales */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Card className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold">{zones.length}</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{zones.length}</p>
                 <p className="text-xs text-muted-foreground">Zones</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold">{activeCenters}</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{activeCenters}</p>
                 <p className="text-xs text-muted-foreground">Centres Actifs</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                <Home className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                <Home className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold">{activeHouseChurches}</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{activeHouseChurches}</p>
                 <p className="text-xs text-muted-foreground">Cellules Actives</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-                <MapIcon className="w-5 h-5 text-orange-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                <MapIcon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold">Douala</p>
-                <p className="text-xs text-muted-foreground">Région Principale</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{centers.length}</p>
+                <p className="text-xs text-muted-foreground">Total Centres</p>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Toggle Vue Carte / Vue Liste */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Barre d'actions : Vue + Recherche + Filtre */}
+        <div className="space-y-4 mb-6">
+          {/* Ligne 1 : Boutons Vue Carte/Liste */}
           <div className="flex gap-2">
             <Button
               variant={view === 'map' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setView('map')}
+              className="flex-1 sm:flex-initial min-h-[44px]"
             >
-              <MapIcon className="w-4 h-4 mr-2" />
-              Vue Carte
+              <MapIcon className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Vue Carte</span>
             </Button>
             <Button
               variant={view === 'list' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setView('list')}
+              className="flex-1 sm:flex-initial min-h-[44px]"
             >
-              <List className="w-4 h-4 mr-2" />
-              Vue Liste
+              <List className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Vue Liste</span>
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Légende:</span>
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-              ● Actif
-            </Badge>
-            <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100">
-              ● Inactif
-            </Badge>
+          {/* Ligne 2 : Recherche + Filtre + Légende */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-11 w-full"
+              />
+            </div>
+
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              className="px-4 py-2.5 border rounded-md text-sm h-11 flex-1 sm:flex-initial sm:min-w-[180px]"
+            >
+              <option value="all">Toutes les zones</option>
+              {zones.map((zone) => (
+                <option key={zone.id} value={zone.id}>
+                  {zone.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 px-3 py-1.5">
+                ● Actif
+              </Badge>
+              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 px-3 py-1.5">
+                ● Inactif
+              </Badge>
+            </div>
           </div>
         </div>
 
@@ -172,87 +394,105 @@ export default function StructurePage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </Card>
             ) : (
-              <>
-                <MapView centers={centers} onCenterClick={handleCenterClick} />
-
-                <Card className="mt-6 p-6 bg-blue-50 border-blue-200">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                    Comment utiliser la carte
-                  </h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Cliquez sur un <strong>marker rouge</strong> pour voir les détails du centre</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Utilisez la molette de la souris ou les boutons +/- pour zoomer</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Cliquez sur "Voir les détails" dans le popup pour accéder aux informations complètes</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Glissez-déposez pour déplacer la carte</span>
-                    </li>
-                  </ul>
-                </Card>
-              </>
+              <MapView centers={filteredCenters} onCenterClick={handleCenterClick} />
             )}
           </div>
         )}
 
         {/* Vue Liste */}
         {view === 'list' && (
-          <div className="space-y-4">
-            {zones.map((zone) => {
-              const zoneCenters = centers.filter((c) => c.zone_id === zone.id);
+          <div className="space-y-4 sm:space-y-6">
+            {filteredZones.map((zone) => {
+              const zoneCenters = filteredCenters.filter((c) => c.zone_id === zone.id);
               return (
-                <Card key={zone.id} className="p-6">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-primary" />
-                    {zone.name}
-                    <Badge variant="outline" className="ml-2">
-                      {zoneCenters.length} centres
-                    </Badge>
-                  </h2>
+                <Card key={zone.id} className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+                      <h2 className="text-lg sm:text-xl font-semibold">{zone.name}</h2>
+                      <Badge variant="outline" className="text-xs">
+                        {zoneCenters.length} centres
+                      </Badge>
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        ({zone.region})
+                      </span>
+                    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {canEdit && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setZoneDialog({ open: true, zone })}
+                          className="min-h-[44px] px-3"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteZone(zone.id)}
+                          className="min-h-[44px] px-3"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {zoneCenters.map((center) => {
-                      const centerHouses = houseChurches.filter(
-                        (h) => h.center_id === center.id
-                      );
+                      const centerHouses = houseChurches.filter((h) => h.center_id === center.id);
                       return (
                         <Card
                           key={center.id}
-                          className="p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary"
-                          onClick={() => handleCenterClick(center.id)}
+                          className="p-4 sm:p-5 hover:shadow-lg transition-shadow border-2"
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold">{center.name}</h3>
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <h3
+                              className="font-semibold cursor-pointer hover:text-primary text-base flex-1 min-w-0"
+                              onClick={() => handleCenterClick(center.id)}
+                            >
+                              {center.name}
+                            </h3>
                             <Badge
-                              className={
+                              className={`flex-shrink-0 text-xs ${
                                 center.status === 'active'
                                   ? 'bg-green-100 text-green-700'
                                   : 'bg-gray-100 text-gray-700'
-                              }
+                              }`}
                             >
                               {center.status === 'active' ? 'Actif' : 'Inactif'}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-3">
+                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                             {center.address}
                           </p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="flex items-center gap-1">
-                              <Home className="w-4 h-4" />
-                              {centerHouses.length} cellules
+                          <div className="flex items-center justify-between text-sm pt-3 border-t">
+                            <span className="flex items-center gap-1.5">
+                              <Home className="w-4 h-4 flex-shrink-0" />
+                              <span>{centerHouses.length} cellules</span>
                             </span>
-                            <span className="text-muted-foreground">
-                              Fondé {new Date(center.founded_date).getFullYear()}
-                            </span>
+                            {canEdit && (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setCenterDialog({ open: true, center })}
+                                  className="h-9 w-9 p-0"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteCenter(center.id)}
+                                  className="h-9 w-9 p-0"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </Card>
                       );
@@ -264,6 +504,30 @@ export default function StructurePage() {
           </div>
         )}
       </div>
+
+      {/* Dialogs */}
+      <ZoneDialog
+        open={zoneDialog.open}
+        onOpenChange={(open) => setZoneDialog({ open, zone: null })}
+        zone={zoneDialog.zone}
+        onSubmit={zoneDialog.zone ? handleUpdateZone : handleCreateZone}
+      />
+
+      <CenterDialog
+        open={centerDialog.open}
+        onOpenChange={(open) => setCenterDialog({ open, center: null })}
+        center={centerDialog.center}
+        zones={zones}
+        onSubmit={centerDialog.center ? handleUpdateCenter : handleCreateCenter}
+      />
+
+      <HouseChurchDialog
+        open={houseDialog.open}
+        onOpenChange={(open) => setHouseDialog({ open, house: null })}
+        houseChurch={houseDialog.house}
+        centers={centers}
+        onSubmit={houseDialog.house ? handleUpdateHouseChurch : handleCreateHouseChurch}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -14,4 +14,12 @@ if (!envUrl || !envKey) {
   console.log('Supabase Client Initialized with URL:', supabaseUrl);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+/**
+ * Client Supabase pour composants côté navigateur
+ * Utilise createBrowserClient de @supabase/ssr pour gérer correctement les cookies
+ * Compatible avec le middleware SSR Next.js
+ */
+export const supabase = createBrowserClient(
+  supabaseUrl,
+  supabaseAnonKey
+);

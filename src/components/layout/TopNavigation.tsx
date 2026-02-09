@@ -13,19 +13,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User, Settings, HelpCircle, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { getPermissions, getHomePageForRole, type UserRole } from '@/lib/permissions';
 
 interface NavTab {
   label: string;
   href: string;
   key: string;
+  permission: 'canAccessDashboard' | 'canAccessReports' | 'canAccessStructure' | 'canAccessSourcing' | 'canAccessMembers' | 'canAccessSettings';
 }
 
-const navigationTabs: NavTab[] = [
-  { label: 'Dashboard', href: '/dashboard', key: 'dashboard' },
-  { label: 'Rapports', href: '/rapports', key: 'rapports' },
-  { label: 'Structure', href: '/structure', key: 'structure' },
-  { label: 'Sourcing', href: '/sourcing', key: 'sourcing' },
-  { label: 'Membres', href: '/membres', key: 'membres' },
+const allNavigationTabs: NavTab[] = [
+  { label: 'Dashboard', href: '/dashboard', key: 'dashboard', permission: 'canAccessDashboard' },
+  { label: 'Rapports', href: '/rapports', key: 'rapports', permission: 'canAccessReports' },
+  { label: 'Structure', href: '/structure', key: 'structure', permission: 'canAccessStructure' },
+  { label: 'Sourcing', href: '/sourcing', key: 'sourcing', permission: 'canAccessSourcing' },
+  { label: 'Membres', href: '/membres', key: 'membres', permission: 'canAccessMembers' },
 ];
 
 export function TopNavigation() {
@@ -45,29 +47,26 @@ export function TopNavigation() {
 
   if (!user) return null;
 
+  // Filtrer les onglets selon les permissions du rôle
+  const permissions = getPermissions(user.role as UserRole);
+  const navigationTabs = allNavigationTabs.filter(tab => permissions[tab.permission]);
+
+  // Déterminer la page d'accueil selon le rôle
+  const homeHref = getHomePageForRole(user.role as UserRole);
+
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
         {/* Logo IFA */}
         <Link
-          href="/dashboard"
+          href={homeHref}
           className="flex items-center gap-3 transition-opacity hover:opacity-80"
         >
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground shadow-md">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
+          <img
+            src="/logo.png"
+            alt="IFA Logo"
+            className="w-10 h-10 object-contain"
+          />
           <span className="font-semibold text-foreground hidden sm:block">
             IFA
           </span>
@@ -148,10 +147,12 @@ export function TopNavigation() {
                 <User className="mr-2 h-4 w-4" />
                 Mon Profil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/parametres')}>
-                <Settings className="mr-2 h-4 w-4" />
-                Paramètres
-              </DropdownMenuItem>
+              {permissions.canAccessSettings && (
+                <DropdownMenuItem onClick={() => router.push('/parametres')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Paramètres
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => router.push('/aide')}>
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Aide
