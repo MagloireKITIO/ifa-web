@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { StatCard } from '../StatCard';
 import { EmptyState } from '../EmptyState';
@@ -15,29 +14,11 @@ import {
   Users,
   FileText,
 } from 'lucide-react';
-import {
-  getMinistryKPIs,
-  type MinistryKPIs,
-} from '@/lib/api/analytics';
+import { useMinistryKPIs } from '@/lib/react-query/hooks';
 
 export function MinistrySection() {
-  const [kpis, setKpis] = useState<MinistryKPIs | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const data = await getMinistryKPIs();
-        setKpis(data);
-      } catch (error) {
-        console.error('Error loading ministry KPIs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Utilisation du hook React Query avec cache intelligent
+  const { data: kpis, isLoading: loading } = useMinistryKPIs();
 
   if (loading) {
     return (

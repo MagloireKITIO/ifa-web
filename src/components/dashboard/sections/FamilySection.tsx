@@ -1,33 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { StatCard } from '../StatCard';
 import { EmptyState } from '../EmptyState';
 import { Home, Heart, Baby, Users, MessageCircle } from 'lucide-react';
-import {
-  getFamilyKPIs,
-  type FamilyKPIs,
-} from '@/lib/api/analytics';
+import { useFamilyKPIs } from '@/lib/react-query/hooks';
 
 export function FamilySection() {
-  const [kpis, setKpis] = useState<FamilyKPIs | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const data = await getFamilyKPIs();
-        setKpis(data);
-      } catch (error) {
-        console.error('Error loading family KPIs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Utilisation du hook React Query avec cache intelligent
+  const { data: kpis, isLoading: loading } = useFamilyKPIs();
 
   if (loading) {
     return (

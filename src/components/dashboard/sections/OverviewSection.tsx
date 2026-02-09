@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '../StatCard';
@@ -16,44 +15,22 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react';
-import {
-  getOverviewKPIs,
-  getMembersKPIs,
-  getTimelineEvents,
-  getHistoricalData,
-  type OverviewKPIs,
-  type TimelineEvent,
-  type HistoricalData,
-} from '@/lib/api/analytics';
 import { useRouter } from 'next/navigation';
+import {
+  useOverviewKPIs,
+  useTimelineEvents,
+  useHistoricalData,
+} from '@/lib/react-query/hooks';
 
 export function OverviewSection() {
   const router = useRouter();
-  const [kpis, setKpis] = useState<OverviewKPIs | null>(null);
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
-  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [kpisData, timeline, historical] = await Promise.all([
-          getOverviewKPIs(),
-          getTimelineEvents(),
-          getHistoricalData(),
-        ]);
-        setKpis(kpisData);
-        setTimelineEvents(timeline);
-        setHistoricalData(historical);
-      } catch (error) {
-        console.error('Error loading overview data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Utilisation des hooks React Query avec cache intelligent
+  const { data: kpis, isLoading: kpisLoading } = useOverviewKPIs();
+  const { data: timelineEvents = [], isLoading: timelineLoading } = useTimelineEvents();
+  const { data: historicalData = [], isLoading: historicalLoading } = useHistoricalData();
+
+  const loading = kpisLoading || timelineLoading || historicalLoading;
 
   if (loading) {
     return (

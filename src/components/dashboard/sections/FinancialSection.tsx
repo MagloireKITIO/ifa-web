@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { StatCard } from '../StatCard';
 import { EmptyState } from '../EmptyState';
@@ -12,30 +11,12 @@ import {
   PiggyBank,
   AlertCircle,
 } from 'lucide-react';
-import {
-  getFinancialKPIs,
-  formatCurrency,
-  type FinancialKPIs,
-} from '@/lib/api/analytics';
+import { useFinancialKPIs } from '@/lib/react-query/hooks';
+import { formatCurrency } from '@/lib/api/analytics';
 
 export function FinancialSection() {
-  const [kpis, setKpis] = useState<FinancialKPIs | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const data = await getFinancialKPIs();
-        setKpis(data);
-      } catch (error) {
-        console.error('Error loading financial KPIs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Utilisation du hook React Query avec cache intelligent
+  const { data: kpis, isLoading: loading } = useFinancialKPIs();
 
   if (loading) {
     return (

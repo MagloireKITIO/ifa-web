@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '../StatCard';
@@ -13,10 +12,7 @@ import {
   Phone,
   AlertCircle,
 } from 'lucide-react';
-import {
-  getMembersKPIs,
-  type MembersKPIs,
-} from '@/lib/api/analytics';
+import { useMembersKPIs } from '@/lib/react-query/hooks';
 import {
   PieChart,
   Pie,
@@ -41,23 +37,8 @@ const COLORS = {
 };
 
 export function MembersSection() {
-  const [kpis, setKpis] = useState<MembersKPIs | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const data = await getMembersKPIs();
-        setKpis(data);
-      } catch (error) {
-        console.error('Error loading members KPIs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Utilisation du hook React Query avec cache intelligent
+  const { data: kpis, isLoading: loading } = useMembersKPIs();
 
   if (loading) {
     return (

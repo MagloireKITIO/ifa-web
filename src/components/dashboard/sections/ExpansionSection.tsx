@@ -1,14 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '../StatCard';
 import { TrendingUp, MapPin, Building2, Home, Calendar } from 'lucide-react';
-import {
-  getExpansionKPIs,
-  type ExpansionKPIs,
-} from '@/lib/api/analytics';
+import { useExpansionKPIs } from '@/lib/react-query/hooks';
 import {
   PieChart,
   Pie,
@@ -25,23 +21,8 @@ const COLORS = {
 };
 
 export function ExpansionSection() {
-  const [kpis, setKpis] = useState<ExpansionKPIs | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const data = await getExpansionKPIs();
-        setKpis(data);
-      } catch (error) {
-        console.error('Error loading expansion KPIs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Utilisation du hook React Query avec cache intelligent
+  const { data: kpis, isLoading: loading } = useExpansionKPIs();
 
   if (loading) {
     return (
