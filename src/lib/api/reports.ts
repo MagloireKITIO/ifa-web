@@ -9,6 +9,10 @@ import type {
   User,
   Database,
 } from '@/types';
+import type {
+  ReportMarriageWithDetails,
+  ReportBirthWithDetails,
+} from './report-events';
 
 // Interface pour les contributions de membres
 export interface MemberContribution {
@@ -37,6 +41,9 @@ export interface FullReport extends Report {
   centerName?: string;
   houseChurchName?: string;
   submitterName?: string;
+  // Phase 2: Événements liés
+  reportMarriages?: ReportMarriageWithDetails[];
+  reportBirths?: ReportBirthWithDetails[];
 }
 
 /**
@@ -45,7 +52,7 @@ export interface FullReport extends Report {
 function mapReportFromDB(data: any): FullReport {
   // data is the report object with joined tables
   const report = data as Report; // Assumes Report type matches DB columns (snake_case)
-  
+
   return {
     ...report,
     statsFinancial: data.stats_financial?.[0] || data.stats_financial || undefined,
@@ -56,6 +63,9 @@ function mapReportFromDB(data: any): FullReport {
     centerName: data.centers?.name,
     houseChurchName: data.house_churches?.name,
     submitterName: data.profiles?.full_name,
+    // Phase 2: Événements
+    reportMarriages: data.report_marriages || undefined,
+    reportBirths: data.report_births || undefined,
     // memberContributions is not currently populated in enrichReports, so leaving undefined
   };
 }
@@ -73,7 +83,18 @@ function getReportsQuery() {
     reporting_periods(*),
     centers(name),
     house_churches(name),
-    profiles:submitted_by(full_name)
+    profiles:submitted_by(full_name),
+    report_marriages(
+      *,
+      spouse1:spouse1_id(id, full_name),
+      spouse2:spouse2_id(id, full_name)
+    ),
+    report_births(
+      *,
+      child:child_id(id, first_name, gender),
+      father:father_id(id, full_name),
+      mother:mother_id(id, full_name)
+    )
   `);
 }
 

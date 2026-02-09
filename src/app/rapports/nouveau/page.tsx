@@ -15,6 +15,7 @@ import { Step5Activities, type ActivitiesData } from '@/components/rapports/step
 import { PeriodSelector } from '@/components/rapports/PeriodSelector';
 import { createReport } from '@/lib/api/reports';
 import { checkReportExists } from '@/lib/api/periods';
+import { addReportMarriage, addReportBirth } from '@/lib/api/report-events';
 
 type FormData = {
   periodId: string;
@@ -226,7 +227,39 @@ export default function NouveauRapportPage() {
         memberContributions: formData.financial.memberContributions,
       });
 
-      if (result.success) {
+      if (result.success && result.reportId) {
+        // Phase 2: Enregistrer les mariages détaillés
+        if (formData.family.marriageDetails && formData.family.marriageDetails.length > 0) {
+          for (const marriage of formData.family.marriageDetails) {
+            if (marriage.spouse1_id && marriage.spouse2_id && marriage.marriage_date) {
+              await addReportMarriage({
+                report_id: result.reportId,
+                spouse1_id: marriage.spouse1_id,
+                spouse2_id: marriage.spouse2_id,
+                marriage_date: marriage.marriage_date,
+                notes: marriage.notes || undefined,
+              });
+            }
+          }
+        }
+
+        // Phase 2: Enregistrer les naissances détaillées
+        if (formData.family.birthDetails && formData.family.birthDetails.length > 0) {
+          for (const birth of formData.family.birthDetails) {
+            if (birth.child_first_name && birth.child_gender && birth.birth_date) {
+              await addReportBirth({
+                report_id: result.reportId,
+                child_first_name: birth.child_first_name,
+                child_gender: birth.child_gender,
+                birth_date: birth.birth_date,
+                father_id: birth.father_id || undefined,
+                mother_id: birth.mother_id || undefined,
+                notes: birth.notes || undefined,
+              });
+            }
+          }
+        }
+
         alert('✅ Rapport soumis avec succès !');
         router.push('/rapports');
       } else {

@@ -78,6 +78,67 @@ export function FamilySection() {
         />
       </div>
 
+      {/* Enfants & Naissances (Phase 2) */}
+      {kpis.totalChildren !== undefined && kpis.totalChildren > 0 && (
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-pink-50 border-blue-200">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Baby className="w-5 h-5 text-blue-600" />
+            Enfants & Naissances
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Total enfants */}
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <p className="text-sm text-gray-600 mb-1">Total enfants</p>
+              <p className="text-3xl font-bold text-blue-600">{kpis.totalChildren}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {kpis.familiesWithChildren} familles
+              </p>
+            </div>
+
+            {/* Garçons */}
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <p className="text-sm text-gray-600 mb-1">Garçons</p>
+              <p className="text-3xl font-bold text-blue-500">{kpis.childrenBoys || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {kpis.totalChildren && kpis.childrenBoys
+                  ? Math.round((kpis.childrenBoys / kpis.totalChildren) * 100)
+                  : 0}% du total
+              </p>
+            </div>
+
+            {/* Filles */}
+            <div className="bg-white rounded-lg p-4 border border-pink-100">
+              <p className="text-sm text-gray-600 mb-1">Filles</p>
+              <p className="text-3xl font-bold text-pink-500">{kpis.childrenGirls || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {kpis.totalChildren && kpis.childrenGirls
+                  ? Math.round((kpis.childrenGirls / kpis.totalChildren) * 100)
+                  : 0}% du total
+              </p>
+            </div>
+
+            {/* Naissances année en cours */}
+            <div className="bg-white rounded-lg p-4 border border-green-100">
+              <p className="text-sm text-gray-600 mb-1">Naissances {new Date().getFullYear()}</p>
+              <p className="text-3xl font-bold text-green-600">
+                {kpis.birthsCurrentYear || 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {kpis.birthsCurrentYearBoys || 0}♂ / {kpis.birthsCurrentYearGirls || 0}♀
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-white rounded-lg border border-blue-100">
+            <p className="text-xs text-blue-700">
+              💡 <strong>Note :</strong> Ces données proviennent des profils membres complétés via le formulaire de sourcing.
+              Les naissances de l'année sont comptabilisées automatiquement.
+            </p>
+          </div>
+        </Card>
+      )}
+
       {/* Détails par Catégorie */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Unions & Célébrations */}

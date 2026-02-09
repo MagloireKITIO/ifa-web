@@ -38,6 +38,17 @@ export interface SourcingResponse {
     center_id?: string;
     house_church_id?: string;
     notes?: string;
+    // Nouveaux champs Phase 2
+    gender?: 'M' | 'F';
+    marital_status?: 'single' | 'married' | 'widowed' | 'divorced';
+    children_count?: number;
+    children_boys?: number;
+    children_girls?: number;
+    children_details?: Array<{
+      first_name: string;
+      gender: 'M' | 'F';
+      birth_year: number;
+    }>;
   };
   rejection_reason?: string;
 }
@@ -404,6 +415,8 @@ export async function approveSourcing(
           is_baptized: memberData.is_baptized,
           marriage_date: memberData.marriage_date,
           notes: memberData.notes,
+          gender: memberData.gender,
+          marital_status: memberData.marital_status,
         })
         .eq('id', memberData.member_id);
 
@@ -414,7 +427,7 @@ export async function approveSourcing(
     }
     // Cas 2 : Création d'un nouveau membre
     else {
-      const { error: insertError } = await supabase
+      const { data: newMember, error: insertError } = await supabase
         .from('members')
         .insert({
           full_name: memberData.full_name,
@@ -428,11 +441,38 @@ export async function approveSourcing(
           house_church_id: memberData.house_church_id,
           status: 'active',
           notes: memberData.notes,
-        });
+          gender: memberData.gender,
+          marital_status: memberData.marital_status,
+        })
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Error creating member:', insertError);
         return { success: false, error: insertError.message };
+      }
+
+      // Si des enfants sont déclarés, les créer
+      if (memberData.children_details && memberData.children_details.length > 0 && newMember) {
+        const childrenToInsert = memberData.children_details.map((child) => ({
+          first_name: child.first_name,
+          gender: child.gender,
+          birth_date: `${child.birth_year}-01-01`, // Date approximative
+          father_id: memberData.gender === 'M' ? newMember.id : null,
+          mother_id: memberData.gender === 'F' ? newMember.id : null,
+          center_id: memberData.center_id,
+          house_church_id: memberData.house_church_id,
+          status: 'active',
+        }));
+
+        const { error: childrenError } = await supabase
+          .from('children')
+          .insert(childrenToInsert);
+
+        if (childrenError) {
+          console.error('Error creating children:', childrenError);
+          // On continue même si la création des enfants échoue
+        }
       }
     }
 

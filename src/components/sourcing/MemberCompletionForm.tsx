@@ -52,6 +52,13 @@ export function MemberCompletionForm({
   const [houseChurchId, setHouseChurchId] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Nouveaux champs Phase 2
+  const [gender, setGender] = useState<'M' | 'F' | ''>('');
+  const [maritalStatus, setMaritalStatus] = useState<'single' | 'married' | 'widowed' | 'divorced' | ''>('');
+  const [childrenCount, setChildrenCount] = useState<number>(0);
+  const [childrenBoys, setChildrenBoys] = useState<number>(0);
+  const [childrenGirls, setChildrenGirls] = useState<number>(0);
+
   // Données de référence
   const [centers, setCenters] = useState<Center[]>([]);
   const [houseChurches, setHouseChurches] = useState<HouseChurch[]>([]);
@@ -96,6 +103,11 @@ export function MemberCompletionForm({
       setFilteredHouseChurches([]);
     }
   }, [centerId, houseChurches]);
+
+  // Synchroniser le nombre total d'enfants avec garçons + filles
+  useEffect(() => {
+    setChildrenCount(childrenBoys + childrenGirls);
+  }, [childrenBoys, childrenGirls]);
 
   const loadCenters = async () => {
     const { data } = await supabase.from('centers').select('*').order('name');
@@ -210,6 +222,12 @@ export function MemberCompletionForm({
         center_id: centerId,
         house_church_id: houseChurchId || undefined,
         notes: notes.trim() || undefined,
+        // Nouveaux champs Phase 2
+        gender: gender || undefined,
+        marital_status: maritalStatus || undefined,
+        children_count: childrenCount > 0 ? childrenCount : undefined,
+        children_boys: childrenBoys > 0 ? childrenBoys : undefined,
+        children_girls: childrenGirls > 0 ? childrenGirls : undefined,
       };
 
       const result = await submitMemberCompletion(data);
@@ -322,6 +340,102 @@ export function MemberCompletionForm({
           </div>
         </div>
 
+        {/* Situation familiale */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+          <h3 className="font-semibold text-lg text-gray-900">Situation familiale</h3>
+
+          <div className="space-y-4">
+            {/* Genre */}
+            <div>
+              <Label htmlFor="gender">Genre</Label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value as 'M' | 'F' | '')}
+                className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white"
+              >
+                <option value="">Sélectionnez</option>
+                <option value="M">Homme</option>
+                <option value="F">Femme</option>
+              </select>
+            </div>
+
+            {/* Statut marital */}
+            <div>
+              <Label htmlFor="maritalStatus">Statut marital</Label>
+              <select
+                id="maritalStatus"
+                value={maritalStatus}
+                onChange={(e) => setMaritalStatus(e.target.value as any)}
+                className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white"
+              >
+                <option value="">Sélectionnez</option>
+                <option value="single">Célibataire</option>
+                <option value="married">Marié(e)</option>
+                <option value="widowed">Veuf/Veuve</option>
+                <option value="divorced">Divorcé(e)</option>
+              </select>
+            </div>
+
+            {/* Date de mariage */}
+            <div>
+              <Label htmlFor="marriageDate">Date de mariage (si applicable)</Label>
+              <Input
+                id="marriageDate"
+                type="date"
+                value={marriageDate}
+                onChange={(e) => setMarriageDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
+            {/* Enfants */}
+            <div className="border-t pt-4 space-y-4">
+              <p className="font-medium text-gray-900">Enfants</p>
+              <p className="text-sm text-gray-600">
+                Si vous avez des enfants, indiquez combien de garçons et de filles
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="childrenBoys">Nombre de garçons</Label>
+                  <Input
+                    id="childrenBoys"
+                    type="number"
+                    value={childrenBoys}
+                    onChange={(e) => setChildrenBoys(Number(e.target.value) || 0)}
+                    min="0"
+                    max="20"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="childrenGirls">Nombre de filles</Label>
+                  <Input
+                    id="childrenGirls"
+                    type="number"
+                    value={childrenGirls}
+                    onChange={(e) => setChildrenGirls(Number(e.target.value) || 0)}
+                    min="0"
+                    max="20"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {childrenCount > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">
+                    <strong>Total :</strong> {childrenCount} enfant{childrenCount > 1 ? 's' : ''}
+                    {childrenBoys > 0 && ` (${childrenBoys} garçon${childrenBoys > 1 ? 's' : ''})`}
+                    {childrenGirls > 0 && ` (${childrenGirls} fille${childrenGirls > 1 ? 's' : ''})`}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Parcours spirituel */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
           <h3 className="font-semibold text-lg text-gray-900">Parcours spirituel</h3>
@@ -391,18 +505,6 @@ export function MemberCompletionForm({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Date de mariage */}
-            <div>
-              <Label htmlFor="marriageDate">Date de mariage (si applicable)</Label>
-              <Input
-                id="marriageDate"
-                type="date"
-                value={marriageDate}
-                onChange={(e) => setMarriageDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-              />
             </div>
           </div>
         </div>

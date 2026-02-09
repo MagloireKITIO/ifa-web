@@ -14,6 +14,9 @@ export interface Member {
   status: string;
   notes: string | null;
   created_at: string;
+  // Nouveaux champs Phase 2
+  gender?: 'M' | 'F';
+  marital_status?: 'single' | 'married' | 'widowed' | 'divorced';
 }
 
 export async function getMembersByCenter(centerId: string): Promise<Member[]> {

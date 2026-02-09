@@ -22,6 +22,12 @@ export interface MembersKPIs {
   membersByCenter: CenterDistribution[];
   membersByZone: ZoneDistribution[];
   completionStats: CompletionStats;
+  // Phase 2: Genre
+  genderDistribution?: {
+    men: number;
+    women: number;
+    unknown: number;
+  };
 }
 
 export interface FinancialKPIs {
@@ -53,6 +59,14 @@ export interface FamilyKPIs {
   totalEngagements: number;
   marriedMembers: number;
   hasData: boolean;
+  // Phase 2: Stats enfants
+  totalChildren?: number;
+  childrenBoys?: number;
+  childrenGirls?: number;
+  birthsCurrentYear?: number;
+  birthsCurrentYearBoys?: number;
+  birthsCurrentYearGirls?: number;
+  familiesWithChildren?: number;
 }
 
 export interface ExpansionKPIs {
@@ -224,6 +238,7 @@ export async function getMembersKPIs(): Promise<MembersKPIs> {
         is_baptized,
         marriage_date,
         center_id,
+        gender,
         centers(id, name, zone_id, zones(id, name))
       `
       )
@@ -344,6 +359,11 @@ export async function getMembersKPIs(): Promise<MembersKPIs> {
           : 0,
     };
 
+    // Phase 2: Gender distribution
+    const men = members?.filter((m: any) => m.gender === 'M').length || 0;
+    const women = members?.filter((m: any) => m.gender === 'F').length || 0;
+    const unknown = members?.filter((m: any) => !m.gender).length || 0;
+
     return {
       totalMembers,
       baptizedMembers,
@@ -353,6 +373,11 @@ export async function getMembersKPIs(): Promise<MembersKPIs> {
       membersByCenter,
       membersByZone,
       completionStats,
+      genderDistribution: {
+        men,
+        women,
+        unknown,
+      },
     };
   } catch (error) {
     console.error('Error fetching members KPIs:', error);
@@ -374,6 +399,11 @@ export async function getMembersKPIs(): Promise<MembersKPIs> {
         birthRate: 0,
         conversionRate: 0,
         joinedRate: 0,
+      },
+      genderDistribution: {
+        men: 0,
+        women: 0,
+        unknown: 0,
       },
     };
   }
@@ -577,6 +607,17 @@ export async function getFamilyKPIs(): Promise<FamilyKPIs> {
       .eq('status', 'active')
       .not('marriage_date', 'is', null);
 
+    // Phase 2: Stats enfants depuis les vues
+    const { data: childrenSummary } = await supabase
+      .from('kpi_children_summary')
+      .select('*')
+      .single();
+
+    const { data: birthsCurrentYear } = await supabase
+      .from('kpi_births_current_year')
+      .select('*')
+      .single();
+
     return {
       totalMarriages,
       totalBirths,
@@ -584,6 +625,14 @@ export async function getFamilyKPIs(): Promise<FamilyKPIs> {
       totalEngagements,
       marriedMembers: marriedMembers || 0,
       hasData: true,
+      // Phase 2
+      totalChildren: childrenSummary?.total_children || 0,
+      childrenBoys: childrenSummary?.boys_count || 0,
+      childrenGirls: childrenSummary?.girls_count || 0,
+      familiesWithChildren: childrenSummary?.families_with_children || 0,
+      birthsCurrentYear: birthsCurrentYear?.total_births || 0,
+      birthsCurrentYearBoys: birthsCurrentYear?.boys || 0,
+      birthsCurrentYearGirls: birthsCurrentYear?.girls || 0,
     };
   } catch (error) {
     console.error('Error fetching family KPIs:', error);

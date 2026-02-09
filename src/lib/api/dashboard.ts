@@ -27,6 +27,13 @@ export interface GenderDistribution {
   total: number;
 }
 
+export interface MembersGenderDistribution {
+  men: number;
+  women: number;
+  unknown: number;
+  total: number;
+}
+
 export interface MonthlyGrowth {
   month: string;
   members: number;
@@ -53,6 +60,30 @@ export interface FamilyStats {
   marriages: number;
   births: number;
   counselingSessions: number;
+  // Nouvelles stats Phase 2
+  birthsCurrentYear?: {
+    total: number;
+    boys: number;
+    girls: number;
+  };
+  totalChildren?: {
+    total: number;
+    boys: number;
+    girls: number;
+    familiesWithChildren: number;
+  };
+}
+
+export interface ChildrenStats {
+  totalChildren: number;
+  boys: number;
+  girls: number;
+  familiesWithChildren: number;
+  birthsCurrentYear: {
+    total: number;
+    boys: number;
+    girls: number;
+  };
 }
 
 /**
@@ -357,6 +388,113 @@ export async function getFamilyStats(): Promise<FamilyStats> {
     marriages: totalMarriages,
     births: totalBirths,
     counselingSessions: totalCounseling,
+  };
+}
+
+/**
+ * Récupère la distribution par genre depuis la table members (Phase 2)
+ */
+export async function getMembersGenderDistribution(): Promise<MembersGenderDistribution> {
+  const { data: members, error } = await supabase
+    .from('members')
+    .select('gender')
+    .eq('status', 'active');
+
+  if (error) {
+    console.error('Error fetching members gender distribution:', error);
+    return { men: 0, women: 0, unknown: 0, total: 0 };
+  }
+
+  const men = members?.filter((m) => m.gender === 'M').length || 0;
+  const women = members?.filter((m) => m.gender === 'F').length || 0;
+  const unknown = members?.filter((m) => !m.gender).length || 0;
+
+  return {
+    men,
+    women,
+    unknown,
+    total: men + women + unknown,
+  };
+}
+
+/**
+ * Récupère les statistiques des enfants (Phase 2)
+ */
+export async function getChildrenStats(): Promise<ChildrenStats> {
+  // Récupérer les stats depuis la vue kpi_children_summary
+  const { data: summaryData, error: summaryError } = await supabase
+    .from('kpi_children_summary')
+    .select('*')
+    .single();
+
+  // Récupérer les naissances de l'année en cours
+  const { data: birthsData, error: birthsError } = await supabase
+    .from('kpi_births_current_year')
+    .select('*')
+    .single();
+
+  if (summaryError || birthsError) {
+    console.error('Error fetching children stats:', summaryError || birthsError);
+    return {
+      totalChildren: 0,
+      boys: 0,
+      girls: 0,
+      familiesWithChildren: 0,
+      birthsCurrentYear: { total: 0, boys: 0, girls: 0 },
+    };
+  }
+
+  return {
+    totalChildren: summaryData?.total_children || 0,
+    boys: summaryData?.boys_count || 0,
+    girls: summaryData?.girls_count || 0,
+    familiesWithChildren: summaryData?.families_with_children || 0,
+    birthsCurrentYear: {
+      total: birthsData?.total_births || 0,
+      boys: birthsData?.boys || 0,
+      girls: birthsData?.girls || 0,
+    },
+  };
+}
+
+/**
+ * Récupère les statistiques familiales avec enfants (Phase 2)
+ */
+export async function getFamilyStatsWithChildren(): Promise<FamilyStats> {
+  // Stats classiques (rapports mensuels)
+  const { data, error } = await supabase
+    .from('stats_family')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching family stats:', error);
+  }
+
+  const totalMarriages = (data || []).reduce((sum: number, s: StatsFamily) => sum + s.marriages, 0);
+  const totalBirths = (data || []).reduce((sum: number, s: StatsFamily) => sum + s.births, 0);
+  const totalCounseling = (data || []).reduce((sum: number, s: StatsFamily) => sum + s.couples_counseled, 0);
+
+  // Stats enfants (table children)
+  const childrenStats = await getChildrenStats();
+
+  // Compter membres mariés
+  const { count: marriedMembersCount } = await supabase
+    .from('members')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
+    .not('marriage_date', 'is', null);
+
+  return {
+    marriages: totalMarriages,
+    births: totalBirths,
+    counselingSessions: totalCounseling,
+    birthsCurrentYear: childrenStats.birthsCurrentYear,
+    totalChildren: {
+      total: childrenStats.totalChildren,
+      boys: childrenStats.boys,
+      girls: childrenStats.girls,
+      familiesWithChildren: childrenStats.familiesWithChildren,
+    },
   };
 }
 

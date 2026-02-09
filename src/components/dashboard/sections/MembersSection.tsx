@@ -118,6 +118,54 @@ export function MembersSection() {
         </div>
       </div>
 
+      {/* Répartition par Genre */}
+      {kpis.genderDistribution && (
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4">Répartition par Genre</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <div>
+                <p className="text-sm text-gray-600">Hommes</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {kpis.genderDistribution.men}
+                </p>
+              </div>
+              <div className="text-sm text-blue-600">
+                {kpis.totalMembers > 0
+                  ? Math.round((kpis.genderDistribution.men / kpis.totalMembers) * 100)
+                  : 0}%
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-pink-50 rounded-lg border border-pink-100">
+              <div>
+                <p className="text-sm text-gray-600">Femmes</p>
+                <p className="text-2xl font-bold text-pink-600">
+                  {kpis.genderDistribution.women}
+                </p>
+              </div>
+              <div className="text-sm text-pink-600">
+                {kpis.totalMembers > 0
+                  ? Math.round((kpis.genderDistribution.women / kpis.totalMembers) * 100)
+                  : 0}%
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <div>
+                <p className="text-sm text-gray-600">Non renseigné</p>
+                <p className="text-2xl font-bold text-gray-600">
+                  {kpis.genderDistribution.unknown}
+                </p>
+              </div>
+              <div className="text-sm text-gray-600">
+                {kpis.totalMembers > 0
+                  ? Math.round((kpis.genderDistribution.unknown / kpis.totalMembers) * 100)
+                  : 0}%
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Répartition par Tranche d'Âge */}
       <Card className="p-6">
         <h3 className="font-semibold mb-4">Répartition par Tranche d'Âge</h3>
