@@ -6,6 +6,7 @@ import { StatCard } from '../StatCard';
 import { HistoryTimeline } from '../HistoryTimeline';
 import { EvolutionCharts } from '../EvolutionCharts';
 import { InsightsPanel, generateInsights } from '../InsightsPanel';
+import { DashboardLoader } from '../DashboardLoader';
 import {
   Users,
   Building2,
@@ -33,13 +34,7 @@ export function OverviewSection() {
   const loading = kpisLoading || timelineLoading || historicalLoading;
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-24 bg-white rounded-xl animate-pulse" />
-        ))}
-      </div>
-    );
+    return <DashboardLoader loadingStates={[kpisLoading, timelineLoading, historicalLoading]} />;
   }
 
   if (!kpis) {

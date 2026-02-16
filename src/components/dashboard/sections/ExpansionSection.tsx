@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '../StatCard';
+import { DashboardLoader } from '../DashboardLoader';
 import { TrendingUp, MapPin, Building2, Home, Calendar } from 'lucide-react';
 import { useExpansionKPIs } from '@/lib/react-query/hooks';
 import {
@@ -25,13 +26,7 @@ export function ExpansionSection() {
   const { data: kpis, isLoading: loading } = useExpansionKPIs();
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2].map((i) => (
-          <div key={i} className="h-64 bg-white rounded-xl animate-pulse" />
-        ))}
-      </div>
-    );
+    return <DashboardLoader loadingStates={[loading]} />;
   }
 
   if (!kpis) {
