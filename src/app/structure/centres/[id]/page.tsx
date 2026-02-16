@@ -50,6 +50,7 @@ export default function CenterDetailsPage() {
   const [selectedHouseChurch, setSelectedHouseChurch] = useState<string | null>(null);
   const [displayedMembers, setDisplayedMembers] = useState<Member[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [houseDialog, setHouseDialog] = useState<{ open: boolean; house?: HouseChurch | null }>({
     open: false,
@@ -131,16 +132,62 @@ export default function CenterDetailsPage() {
   };
 
   const handleDeleteHouseChurch = async (houseId: string) => {
-    if (!confirm('Supprimer cette cellule ? Les membres seront non affectés.')) return;
-    const result = await deleteHouseChurch(houseId);
-    if (result.success) {
-      showToast('success', 'Cellule supprimée');
-      loadData();
-      if (selectedHouseChurch === houseId) {
-        setSelectedHouseChurch('unassigned');
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+
+      // Première vérification : vérifier s'il y a des dépendances
+      const checkResult = await deleteHouseChurch(houseId, false);
+
+      const membersCount = checkResult.membersCount || 0;
+      const profilesCount = checkResult.profilesCount || 0;
+      const childrenCount = checkResult.childrenCount || 0;
+      const reportsCount = checkResult.reportsCount || 0;
+      const contributionsCount = checkResult.contributionsCount || 0;
+
+      const totalCount = membersCount + profilesCount + childrenCount + reportsCount + contributionsCount;
+
+      // Construire le message de confirmation
+      let message = '';
+      if (totalCount > 0) {
+        const details = [];
+        if (membersCount > 0) details.push(`${membersCount} membre(s)`);
+        if (profilesCount > 0) details.push(`${profilesCount} profil(s)`);
+        if (childrenCount > 0) details.push(`${childrenCount} enfant(s)`);
+        if (reportsCount > 0) details.push(`${reportsCount} rapport(s)`);
+        if (contributionsCount > 0) details.push(`${contributionsCount} contribution(s)`);
+
+        message = `⚠️ ATTENTION : Cette cellule contient :\n\n` +
+          `• ${details.join('\n• ')}\n\n` +
+          `La suppression de la cellule entraînera :\n` +
+          `- Dissociation de tous les éléments liés\n\n` +
+          `Voulez-vous vraiment continuer ?`;
+      } else {
+        message = 'Supprimer cette cellule ? Les membres seront non affectés.';
       }
-    } else {
-      showToast('error', result.error || 'Erreur');
+
+      if (!confirm(message)) {
+        setIsDeleting(false);
+        return;
+      }
+
+      // Afficher un toast de progression
+      showToast('info', 'Suppression en cours...');
+
+      // Suppression avec mise à NULL
+      const cascadeResult = await deleteHouseChurch(houseId, true);
+      if (cascadeResult.success) {
+        showToast('success', 'Cellule supprimée');
+        await loadData();
+        if (selectedHouseChurch === houseId) {
+          setSelectedHouseChurch('unassigned');
+        }
+      } else {
+        showToast('error', cascadeResult.error || 'Erreur');
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -196,6 +243,17 @@ export default function CenterDetailsPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <TopNavigation />
+
+      {/* Overlay de suppression en cours */}
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+            <p className="text-lg font-medium">Suppression en cours...</p>
+            <p className="text-sm text-muted-foreground">Veuillez patienter</p>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}

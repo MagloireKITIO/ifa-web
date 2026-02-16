@@ -194,20 +194,37 @@ export async function updateHouseChurch(id: string, updates: Partial<Omit<HouseC
 // DELETE OPERATIONS (avec validations)
 // ============================================
 
-export async function deleteZone(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteZone(id: string, cascade: boolean = false): Promise<{ success: boolean; error?: string; centersCount?: number }> {
   // Vérifier si la zone a des centres
   const { data: centers } = await supabase
     .from('centers')
     .select('id')
     .eq('zone_id', id);
 
-  if (centers && centers.length > 0) {
+  const centersCount = centers?.length || 0;
+
+  // Si pas en mode cascade, retourner seulement les infos sans supprimer
+  if (!cascade) {
     return {
       success: false,
-      error: `Impossible de supprimer cette zone. Elle contient ${centers.length} centre(s).`
+      centersCount,
+      error: centersCount > 0
+        ? `Cette zone contient ${centersCount} centre(s).`
+        : 'Vérification effectuée'
     };
   }
 
+  // Mode cascade : supprimer tous les centres (qui géreront leurs propres dépendances)
+  if (centersCount > 0) {
+    for (const center of centers || []) {
+      const result = await deleteCenter(center.id, true);
+      if (!result.success) {
+        return { success: false, error: `Erreur lors de la suppression du centre: ${result.error}` };
+      }
+    }
+  }
+
+  // Supprimer la zone
   const { error } = await supabase
     .from('zones')
     .delete()
@@ -221,33 +238,66 @@ export async function deleteZone(id: string): Promise<{ success: boolean; error?
   return { success: true };
 }
 
-export async function deleteCenter(id: string): Promise<{ success: boolean; error?: string }> {
-  // Vérifier si le centre a des house churches
-  const { data: houses } = await supabase
-    .from('house_churches')
-    .select('id')
-    .eq('center_id', id);
+export async function deleteCenter(id: string, cascade: boolean = false): Promise<{ success: boolean; error?: string; housesCount?: number; membersCount?: number; profilesCount?: number; childrenCount?: number; reportsCount?: number }> {
+  // Vérifier toutes les tables qui référencent center_id
+  const [houses, members, profiles, children, reports] = await Promise.all([
+    supabase.from('house_churches').select('id').eq('center_id', id),
+    supabase.from('members').select('id').eq('center_id', id),
+    supabase.from('profiles').select('id').eq('center_id', id),
+    supabase.from('children').select('id').eq('center_id', id),
+    supabase.from('reports').select('id').eq('center_id', id),
+  ]);
 
-  if (houses && houses.length > 0) {
+  const housesCount = houses.data?.length || 0;
+  const membersCount = members.data?.length || 0;
+  const profilesCount = profiles.data?.length || 0;
+  const childrenCount = children.data?.length || 0;
+  const reportsCount = reports.data?.length || 0;
+
+  const totalCount = housesCount + membersCount + profilesCount + childrenCount + reportsCount;
+
+  // Si pas en mode cascade, retourner seulement les infos sans supprimer
+  if (!cascade) {
     return {
       success: false,
-      error: `Impossible de supprimer ce centre. Il contient ${houses.length} cellule(s).`
+      housesCount,
+      membersCount,
+      profilesCount,
+      childrenCount,
+      reportsCount,
+      error: totalCount > 0
+        ? `Ce centre a des dépendances (${housesCount} cellules, ${membersCount} membres, ${profilesCount} profils, ${childrenCount} enfants, ${reportsCount} rapports).`
+        : 'Vérification effectuée'
     };
   }
 
-  // Vérifier si le centre a des membres
-  const { data: members } = await supabase
-    .from('members')
-    .select('id')
-    .eq('center_id', id);
-
-  if (members && members.length > 0) {
-    return {
-      success: false,
-      error: `Impossible de supprimer ce centre. Il contient ${members.length} membre(s).`
-    };
+  // Mode cascade : supprimer en cascade
+  // 1. Supprimer toutes les cellules du centre (qui gèrera leurs propres dépendances)
+  if (housesCount > 0) {
+    for (const house of houses.data || []) {
+      const result = await deleteHouseChurch(house.id, true);
+      if (!result.success) {
+        return { success: false, error: `Erreur lors de la suppression de la cellule: ${result.error}` };
+      }
+    }
   }
 
+  // 2. Mettre à NULL toutes les références directes au centre
+  const updates = await Promise.all([
+    supabase.from('members').update({ center_id: null }).eq('center_id', id),
+    supabase.from('profiles').update({ center_id: null }).eq('center_id', id),
+    supabase.from('children').update({ center_id: null }).eq('center_id', id),
+    supabase.from('reports').update({ center_id: null }).eq('center_id', id),
+  ]);
+
+  // Vérifier les erreurs
+  const errors = updates.filter(u => u.error);
+  if (errors.length > 0) {
+    console.error('Error updating references:', errors);
+    return { success: false, error: 'Erreur lors de la mise à jour des références' };
+  }
+
+  // 3. Supprimer le centre
   const { error } = await supabase
     .from('centers')
     .delete()
@@ -261,20 +311,56 @@ export async function deleteCenter(id: string): Promise<{ success: boolean; erro
   return { success: true };
 }
 
-export async function deleteHouseChurch(id: string): Promise<{ success: boolean; error?: string }> {
-  // Vérifier si la cellule a des membres
-  const { data: members } = await supabase
-    .from('members')
-    .select('id')
-    .eq('house_church_id', id);
+export async function deleteHouseChurch(id: string, cascade: boolean = false): Promise<{ success: boolean; error?: string; membersCount?: number; profilesCount?: number; childrenCount?: number; reportsCount?: number; contributionsCount?: number }> {
+  // Vérifier toutes les tables qui référencent house_church_id
+  const [members, profiles, children, reports, contributions] = await Promise.all([
+    supabase.from('members').select('id').eq('house_church_id', id),
+    supabase.from('profiles').select('id').eq('house_church_id', id),
+    supabase.from('children').select('id').eq('house_church_id', id),
+    supabase.from('reports').select('id').eq('house_church_id', id),
+    supabase.from('member_contributions').select('id').eq('house_church_id', id),
+  ]);
 
-  if (members && members.length > 0) {
+  const membersCount = members.data?.length || 0;
+  const profilesCount = profiles.data?.length || 0;
+  const childrenCount = children.data?.length || 0;
+  const reportsCount = reports.data?.length || 0;
+  const contributionsCount = contributions.data?.length || 0;
+
+  const totalCount = membersCount + profilesCount + childrenCount + reportsCount + contributionsCount;
+
+  // Si pas en mode cascade, retourner seulement les infos sans supprimer
+  if (!cascade) {
     return {
       success: false,
-      error: `Impossible de supprimer cette cellule. Elle contient ${members.length} membre(s).`
+      membersCount,
+      profilesCount,
+      childrenCount,
+      reportsCount,
+      contributionsCount,
+      error: totalCount > 0
+        ? `Cette cellule a des dépendances (${membersCount} membres, ${profilesCount} profils, ${childrenCount} enfants, ${reportsCount} rapports, ${contributionsCount} contributions).`
+        : 'Vérification effectuée'
     };
   }
 
+  // Mode cascade : mettre à NULL toutes les références avant suppression
+  const updates = await Promise.all([
+    supabase.from('members').update({ house_church_id: null }).eq('house_church_id', id),
+    supabase.from('profiles').update({ house_church_id: null }).eq('house_church_id', id),
+    supabase.from('children').update({ house_church_id: null }).eq('house_church_id', id),
+    supabase.from('reports').update({ house_church_id: null }).eq('house_church_id', id),
+    supabase.from('member_contributions').update({ house_church_id: null }).eq('house_church_id', id),
+  ]);
+
+  // Vérifier les erreurs
+  const errors = updates.filter(u => u.error);
+  if (errors.length > 0) {
+    console.error('Error updating references:', errors);
+    return { success: false, error: 'Erreur lors de la mise à jour des références' };
+  }
+
+  // Supprimer la cellule
   const { error } = await supabase
     .from('house_churches')
     .delete()
