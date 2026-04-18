@@ -1,0 +1,40 @@
+name: Keep Alive
+
+on:
+  schedule:
+    # Run every week (Sundays at 00:00 UTC) to keep repo and Supabase active
+    - cron: '0 0 * * 0'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
+
+      - name: Keep Supabase DB alive
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "Pinging Supabase to keep database active..."
+          curl -X POST "${SUPABASE_URL}/rest/v1/rpc/keep_alive" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}' || echo "Keep-alive ping sent (response may vary)"
+
+      - name: Update keep-alive timestamp
+        run: |
+          echo "Last keep-alive: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" > .github/keep-alive.txt
+
+      - name: Commit keep-alive activity
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .github/keep-alive.txt
+          git commit -m "chore: keep-alive ping [skip ci]" || echo "No changes to commit"
+          git push || echo "Nothing to push"
