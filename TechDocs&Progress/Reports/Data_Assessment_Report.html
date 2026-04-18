@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFA Data Migration & Assessment Report</title>
+    <style>
+        :root {
+            --primary: #01579b;
+            --secondary: #0288d1;
+            --success: #2e7d32;
+            --warning: #ef6c00;
+            --danger: #c62828;
+            --light: #f5f5f5;
+            --dark: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+        h1, h2, h3 { color: var(--primary); }
+        .header {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: #fff;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: var(--secondary);
+            color: white;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.85em;
+            color: white;
+        }
+        .status-go { background-color: var(--success); }
+        .status-caution { background-color: var(--warning); }
+        .status-stop { background-color: var(--danger); }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Consolas', monospace;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .metric-box {
+            background: white;
+            padding: 15px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .recommendation {
+            border-left: 5px solid var(--warning);
+            padding-left: 15px;
+            background-color: #fff3e0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Data Assessment & Migration Report</h1>
+    <p><strong>Project:</strong> IFA Dashboard Ingestion</p>
+    <p><strong>Date:</strong> 2026-02-04</p>
+    <p><strong>Status:</strong> <span class="status-badge status-caution">GO WITH REMEDIATION</span></p>
+</div>
+
+<div class="card">
+    <h2>1. Executive Summary</h2>
+    <p>The raw data analysis reveals a significant mismatch between the current database schema (Statistical Aggregates) and the provided source files (Detailed Member Lists). While the source data is rich and valuable, it requires a structural update to the database to be fully utilized.</p>
+    
+    <div class="metric-grid">
+        <div class="metric-box">
+            <h3>6 Files</h3>
+            <p>Analyzed for structural compatibility</p>
+        </div>
+        <div class="metric-box">
+            <h3>~500+ Members</h3>
+            <p>Estimated individual records found</p>
+        </div>
+        <div class="metric-box">
+            <h3>CRITICAL GAP</h3>
+            <p>Missing `members` table in current DB</p>
+        </div>
+        <div class="metric-box">
+            <h3>Data Quality</h3>
+            <p>Mixed (Headers vary by file)</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>2. Detailed File Analysis & Mapping</h2>
+    
+    <h3>A. Member Lists (The Detail Data)</h3>
+    <p>The majority of files contain lists of specific people. Currently, we have no table to store this. <strong>Recommendation: Create `public.members` table.</strong></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Source File</th>
+                <th>Raw Columns (Identified)</th>
+                <th>Target DB Field (Proposed)</th>
+                <th>Issues / Transformations</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Assemblées IFA COGEFAR...</strong></td>
+                <td>NOM ET PRENOMS</td>
+                <td><code>members.full_name</code></td>
+                <td>Headers on Row 2.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>CONTACTS</td>
+                <td><code>members.phone</code></td>
+                <td>Normalize formats (e.g., 699...).</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Année de naissance</td>
+                <td><code>members.birth_year</code></td>
+                <td>Store as Int or Date (Jan 1st).</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Baptême dans l'eau</td>
+                <td><code>members.is_baptized</code></td>
+                <td>Convert "Oui/Non" to Boolean.</td>
+            </tr>
+            <tr>
+                <td><strong>LISTE DES MEMBRES... JAPOMA</strong></td>
+                <td>Nom & Prénom</td>
+                <td><code>members.full_name</code></td>
+                <td>Headers on Row 3.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Assemblée de Maison</td>
+                <td><code>house_churches.id</code></td>
+                <td>Needs Lookup/Fuzzy Match to House Church DB IDs.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Statut</td>
+                <td><code>members.status</code></td>
+                <td>Map to Enum (Member, Visitor, etc.).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>B. Aggregated Reports (The Statistical Data)</h3>
+    <p>These files map directly to our existing `stats_people` and `centers` tables.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Source File</th>
+                <th>Raw Columns</th>
+                <th>Target DB Field</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Effectifs des assemblées EoY2025</strong></td>
+                <td>EGLISES</td>
+                <td><code>centers.name</code></td>
+                <td>Use this to seed the `centers` table.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>EFFECTIFS EoY 2020-2024</td>
+                <td><code>stats_people.attendance_total</code></td>
+                <td><strong>Historic Load:</strong> Create 1 Report per year (Dec 31st) to store this history.</td>
+            </tr>
+            <tr>
+                <td><strong>Rapport Occupation...</strong></td>
+                <td>OBJECTIF 2025</td>
+                <td>N/A (Goals)</td>
+                <td>Store as a separate "Goals" table or metadata?</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>3. Data Quality & Cleaning Rules</h2>
+    <ul>
+        <li><strong>Header Hunting:</strong> Scripts must dynamically find the header row. It varies from Row 1 to Row 3.</li>
+        <li><strong>Matrix Unpivoting:</strong> <code>ETAT ASSEMBLEES BONAMOUSSADI</code> is a matrix. It needs to be "melted" (Unpivoted) to extract (Assembly, Member_Count) pairs.</li>
+        <li><strong>Multiple Tables:</strong> <code>Listes Assemblées Bonaberi.xlsx</code> contains multiple disconnected tables. ETL must split by blank lines or "ASSEMBLEE..." titles.</li>
+        <li><strong>Boolean Logic:</strong> Columns like "Baptême" often contain "Oui", "Non", "X", or are blank. Rule: <code>IF val IN ['Oui', 'X', 'Yes'] THEN true ELSE false</code>.</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h2>4. Proposed Schema Update (DDL)</h2>
+    <p class="recommendation"><strong>Action Required:</strong> To ingest the provided Excel files, we MUST add a `members` table. The `profiles` table is only for Leaders who log in.</p>
+    
+    <div class="code-block">
+<pre>
+-- NEW TABLE: Members (The people in the pews)
+CREATE TABLE public.members (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name text NOT NULL,
+    phone text,
+    birth_year int,
+    conversion_year int,
+    is_baptized boolean DEFAULT false,
+    
+    -- Link to Structure
+    center_id uuid REFERENCES public.centers(id),
+    house_church_id uuid REFERENCES public.house_churches(id),
+    
+    -- Status
+    status text DEFAULT 'active', -- e.g. active, visitor, child
+    notes text,
+    created_at timestamp DEFAULT now()
+);
+
+-- RLS for Members
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Center Leads view/edit their members" ON public.members 
+FOR ALL TO authenticated
+USING (
+  public.get_my_role() = 'center_lead' AND 
+  center_id = public.get_my_center_id()
+);
+</pre>
+    </div>
+</div>
+
+<div class="card">
+    <h2>5. Migration Strategy & Pipeline</h2>
+    
+    <h3>Phase 1: Structure Seeding</h3>
+    <ol>
+        <li><strong>Extract Centers:</strong> Read <code>Effectifs...xlsx</code> -> Insert unique "EGLISES" into `public.centers`.</li>
+        <li><strong>Extract House Churches:</strong> Scan headers of Bonaberi/Cogefar files -> Insert into `public.house_churches` linked to respective Centers.</li>
+    </ol>
+
+    <h3>Phase 2: Member Import</h3>
+    <ol>
+        <li><strong>Iterate Files:</strong> Run Python script to parse member lists.</li>
+        <li><strong>Lookup IDs:</strong> Match "Assemblée de Maison" name to `public.house_churches.id`.</li>
+        <li><strong>Insert Members:</strong> Load ~500 rows into `public.members`.</li>
+    </ol>
+
+    <h3>Phase 3: Historical Stats</h3>
+    <ol>
+        <li><strong>Create Reports:</strong> Generate "Annual Report 2020", "2021", etc., in `public.reports`.</li>
+        <li><strong>Load Stats:</strong> Read <code>Effectifs...xlsx</code> columns (EoY 2020...) -> Insert into `stats_people`.</li>
+    </ol>
+</div>
+
+<div class="card">
+    <h2>6. Risk Assessment</h2>
+    <table>
+        <tr>
+            <th>Risk</th>
+            <th>Impact</th>
+            <th>Mitigation</th>
+        </tr>
+        <tr>
+            <td><strong>Schema Mismatch</strong></td>
+            <td>High</td>
+            <td><strong>Must create `members` table</strong> immediately. Current schema cannot store individual names.</td>
+        </tr>
+        <tr>
+            <td><strong>Duplicate Members</strong></td>
+            <td>Medium</td>
+            <td>Use (Name + Phone) as composite key for deduplication during import.</td>
+        </tr>
+        <tr>
+            <td><strong>Orphaned Data</strong></td>
+            <td>Low</td>
+            <td>House Churches in Excel that don't match a Center in DB. Create a "General/Unknown" House Church per Center for fallbacks.</td>
+        </tr>
+    </table>
+</div>
+
+<script>
+    console.log("Report generated successfully.");
+</script>
+</body>
+</html>

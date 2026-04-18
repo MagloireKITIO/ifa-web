@@ -1,0 +1,1357 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Data Schema Compatibility Analysis</title>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; }
+            h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+            h2 { color: #2980b9; margin-top: 30px; }
+            h3 { color: #16a085; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+            th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background-color: #f8f9fa; font-weight: 600; color: #555; }
+            tr:hover { background-color: #f5f5f5; }
+            .status-ok { color: #27ae60; font-weight: bold; }
+            .status-warning { color: #f39c12; font-weight: bold; }
+            .status-error { color: #c0392b; font-weight: bold; }
+            .badge { display: inline-block; padding: 3px 7px; border-radius: 4px; font-size: 0.8em; color: white; }
+            .bg-green { background-color: #27ae60; }
+            .bg-red { background-color: #c0392b; }
+            .bg-orange { background-color: #f39c12; }
+            .summary-box { background-color: #e8f6f3; padding: 15px; border-radius: 5px; border-left: 5px solid #1abc9c; margin-bottom: 20px; }
+            .recommendation { background-color: #fef9e7; padding: 10px; border-left: 4px solid #f1c40f; margin: 10px 0; }
+            .checklist { list-style-type: none; padding: 0; }
+            .checklist li { margin-bottom: 10px; padding-left: 25px; position: relative; }
+            .checklist li:before { content: '☐'; position: absolute; left: 0; color: #7f8c8d; }
+        </style>
+    </head>
+    <body>
+        <h1>Comprehensive Data Schema Compatibility Analysis</h1>
+        <p><strong>Date:</strong> 2026-02-04</p>
+        <p><strong>Source 1 (Frontend Mock):</strong> db.json</p>
+        <p><strong>Source 2 (Backend API):</strong> schema.sql (Supabase)</p>
+
+        <div class="summary-box">
+            <h2>Executive Summary</h2>
+            <p>This report analyzes the compatibility between the frontend mock data structures and the backend database schema. 
+            The analysis identifies critical discrepancies in naming conventions (CamelCase vs SnakeCase), data types (String IDs vs UUIDs), 
+            and missing fields that require immediate attention before integration.</p>
+        </div>
+
+        <h2>1. Entity Gap Analysis</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Entity (Mock)</th>
+                    <th>Backend Table (SQL)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+    
+                <tr>
+                    <td>users</td>
+                    <td>profiles</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>zones</td>
+                    <td>zones</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>centers</td>
+                    <td>centers</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>house_churches</td>
+                    <td>house_churches</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>reporting_periods</td>
+                    <td>reporting_periods</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>reports</td>
+                    <td>reports</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>stats_financial</td>
+                    <td>stats_financial</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>stats_people</td>
+                    <td>stats_people</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>stats_family</td>
+                    <td>stats_family</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>stats_activities</td>
+                    <td>stats_activities</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>sourcing_campaigns</td>
+                    <td>sourcing_campaigns</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>sourcing_responses</td>
+                    <td>sourcing_responses</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>notifications</td>
+                    <td>notifications</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>audit_logs</td>
+                    <td>audit_logs</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>members</td>
+                    <td>members</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+                <tr>
+                    <td>member_contributions</td>
+                    <td>member_contributions</td>
+                    <td class="status-ok">Matched</td>
+                </tr>
+        
+            </tbody>
+        </table>
+    <h2>2. Detailed Field & Type Compatibility</h2><h3>Entity: users ↔ Table: profiles</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>email <span class="badge bg-green">string</span></td>
+                    <td>email <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>full_name <span class="badge bg-green">string</span></td>
+                    <td>full_name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>role <span class="badge bg-green">string</span></td>
+                    <td>role <span class="badge bg-green">public.user_role</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>center_id <span class="badge bg-green">string</span></td>
+                    <td>center_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>house_church_id</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>avatar <span class="badge bg-green">string</span></td>
+                    <td>avatar <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>updated_at <span class="badge bg-green">string</span></td>
+                    <td>updated_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: zones ↔ Table: zones</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>name <span class="badge bg-green">string</span></td>
+                    <td>name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>region <span class="badge bg-green">string</span></td>
+                    <td>region <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: centers ↔ Table: centers</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>name <span class="badge bg-green">string</span></td>
+                    <td>name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>zone_id <span class="badge bg-green">string</span></td>
+                    <td>zone_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>address <span class="badge bg-green">string</span></td>
+                    <td>address <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>founded_date <span class="badge bg-green">string</span></td>
+                    <td>founded_date <span class="badge bg-green">date</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>status <span class="badge bg-green">string</span></td>
+                    <td>status <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>latitude <span class="badge bg-green">float</span></td>
+                    <td>latitude <span class="badge bg-green">decimal(108)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>longitude <span class="badge bg-green">float</span></td>
+                    <td>longitude <span class="badge bg-green">decimal(118)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: house_churches ↔ Table: house_churches</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>name <span class="badge bg-green">string</span></td>
+                    <td>name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>center_id <span class="badge bg-green">string</span></td>
+                    <td>center_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>zone_area <span class="badge bg-green">string</span></td>
+                    <td>zone_area <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>host_name <span class="badge bg-green">string</span></td>
+                    <td>host_name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>status <span class="badge bg-green">string</span></td>
+                    <td>status <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: reporting_periods ↔ Table: reporting_periods</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>name <span class="badge bg-green">string</span></td>
+                    <td>name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>start_date <span class="badge bg-green">string</span></td>
+                    <td>start_date <span class="badge bg-green">date</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>end_date <span class="badge bg-green">string</span></td>
+                    <td>end_date <span class="badge bg-green">date</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>is_locked <span class="badge bg-green">boolean</span></td>
+                    <td>is_locked <span class="badge bg-green">boolean</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>fiscal_year <span class="badge bg-green">integer</span></td>
+                    <td>fiscal_year <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: reports ↔ Table: reports</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>period_id <span class="badge bg-green">string</span></td>
+                    <td>period_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>center_id <span class="badge bg-green">string</span></td>
+                    <td>center_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>house_church_id <span class="badge bg-green">nullable</span></td>
+                    <td>house_church_id <span class="badge bg-green">uuid</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>submitted_by <span class="badge bg-green">string</span></td>
+                    <td>submitted_by <span class="badge bg-green">uuid</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>submitted_at <span class="badge bg-green">string</span></td>
+                    <td>submitted_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>status <span class="badge bg-green">string</span></td>
+                    <td>status <span class="badge bg-green">public.report_status</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: stats_financial ↔ Table: stats_financial</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>report_id <span class="badge bg-green">string</span></td>
+                    <td>report_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>currency <span class="badge bg-green">string</span></td>
+                    <td>currency <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>tithes <span class="badge bg-green">float</span></td>
+                    <td>tithes <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>offerings_general <span class="badge bg-green">float</span></td>
+                    <td>offerings_general <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>offerings_events <span class="badge bg-green">float</span></td>
+                    <td>offerings_events <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>offerings_investment <span class="badge bg-green">float</span></td>
+                    <td>offerings_investment <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>expense_admin <span class="badge bg-green">float</span></td>
+                    <td>expense_admin <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>expense_rent <span class="badge bg-green">float</span></td>
+                    <td>expense_rent <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>expense_mission <span class="badge bg-green">float</span></td>
+                    <td>expense_mission <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>expense_events <span class="badge bg-green">float</span></td>
+                    <td>expense_events <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>notes <span class="badge bg-green">nullable</span></td>
+                    <td>notes <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: stats_people ↔ Table: stats_people</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>report_id <span class="badge bg-green">string</span></td>
+                    <td>report_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>attendance_men <span class="badge bg-green">integer</span></td>
+                    <td>attendance_men <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>attendance_women <span class="badge bg-green">integer</span></td>
+                    <td>attendance_women <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>attendance_children <span class="badge bg-green">integer</span></td>
+                    <td>attendance_children <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>attendance_total <span class="badge bg-green">integer</span></td>
+                    <td>attendance_total <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>new_converts <span class="badge bg-green">integer</span></td>
+                    <td>new_converts <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>first_timers <span class="badge bg-green">integer</span></td>
+                    <td>first_timers <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>baptisms <span class="badge bg-green">integer</span></td>
+                    <td>baptisms <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>members_active_start <span class="badge bg-green">integer</span></td>
+                    <td>members_active_start <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>members_gained <span class="badge bg-green">integer</span></td>
+                    <td>members_gained <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>members_lost <span class="badge bg-green">integer</span></td>
+                    <td>members_lost <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>members_active_end <span class="badge bg-green">integer</span></td>
+                    <td>members_active_end <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: stats_family ↔ Table: stats_family</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>report_id <span class="badge bg-green">string</span></td>
+                    <td>report_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>marriages <span class="badge bg-green">integer</span></td>
+                    <td>marriages <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>engagements <span class="badge bg-green">integer</span></td>
+                    <td>engagements <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>births <span class="badge bg-green">integer</span></td>
+                    <td>births <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>couples_counseled <span class="badge bg-green">integer</span></td>
+                    <td>couples_counseled <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: stats_activities ↔ Table: stats_activities</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>report_id <span class="badge bg-green">string</span></td>
+                    <td>report_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>people_trained <span class="badge bg-green">integer</span></td>
+                    <td>people_trained <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>pastors_certified <span class="badge bg-green">integer</span></td>
+                    <td>pastors_certified <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>social_actions_count <span class="badge bg-green">integer</span></td>
+                    <td>social_actions_count <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>meals_distributed <span class="badge bg-green">integer</span></td>
+                    <td>meals_distributed <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>youth_mentored <span class="badge bg-green">integer</span></td>
+                    <td>youth_mentored <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>home_visits <span class="badge bg-green">integer</span></td>
+                    <td>home_visits <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>evangelism_outreach_count <span class="badge bg-green">integer</span></td>
+                    <td>evangelism_outreach_count <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: sourcing_campaigns ↔ Table: sourcing_campaigns</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>title <span class="badge bg-green">string</span></td>
+                    <td>title <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>description <span class="badge bg-green">string</span></td>
+                    <td>description <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>start_date <span class="badge bg-green">string</span></td>
+                    <td>start_date <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>end_date <span class="badge bg-green">string</span></td>
+                    <td>end_date <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>status <span class="badge bg-green">string</span></td>
+                    <td>status <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>type <span class="badge bg-green">string</span></td>
+                    <td>type <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>center_ids <span class="badge bg-green">string</span></td>
+                    <td>center_ids <span class="badge bg-green">text[]</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>unique_link <span class="badge bg-green">string</span></td>
+                    <td>unique_link <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>qr_code <span class="badge bg-green">string</span></td>
+                    <td>qr_code <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>fields <span class="badge bg-green">string</span></td>
+                    <td>fields <span class="badge bg-green">text[]</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>responses_count <span class="badge bg-green">integer</span></td>
+                    <td>responses_count <span class="badge bg-green">int</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_by <span class="badge bg-green">string</span></td>
+                    <td>created_by <span class="badge bg-green">uuid</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: sourcing_responses ↔ Table: sourcing_responses</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>campaign_id <span class="badge bg-green">string</span></td>
+                    <td>campaign_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>submitted_at <span class="badge bg-green">string</span></td>
+                    <td>submitted_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>status <span class="badge bg-green">string</span></td>
+                    <td>status <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>data <span class="badge bg-green">string</span></td>
+                    <td>data <span class="badge bg-green">jsonb</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: notifications ↔ Table: notifications</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>user_id <span class="badge bg-green">string</span></td>
+                    <td>user_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>type <span class="badge bg-green">string</span></td>
+                    <td>type <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>title <span class="badge bg-green">string</span></td>
+                    <td>title <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>message <span class="badge bg-green">string</span></td>
+                    <td>message <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>is_read <span class="badge bg-green">boolean</span></td>
+                    <td>is_read <span class="badge bg-green">boolean</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>action_url <span class="badge bg-green">string</span></td>
+                    <td>action_url <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: audit_logs ↔ Table: audit_logs</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>table_name <span class="badge bg-green">string</span></td>
+                    <td>table_name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>record_id <span class="badge bg-green">string</span></td>
+                    <td>record_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>action <span class="badge bg-green">string</span></td>
+                    <td>action <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>old_data <span class="badge bg-green">string</span></td>
+                    <td>old_data <span class="badge bg-green">jsonb</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>new_data <span class="badge bg-green">string</span></td>
+                    <td>new_data <span class="badge bg-green">jsonb</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>performed_by <span class="badge bg-green">string</span></td>
+                    <td>performed_by <span class="badge bg-green">uuid</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>performed_at <span class="badge bg-green">string</span></td>
+                    <td>performed_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table><h3>Entity: members ↔ Table: members</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>full_name <span class="badge bg-green">string</span></td>
+                    <td>full_name <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>email</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>phone <span class="badge bg-green">string</span></td>
+                    <td>phone <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>gender</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>birth_date</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>address</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>marital_status</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>has_children</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>number_of_children</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>house_church_id <span class="badge bg-green">string</span></td>
+                    <td>house_church_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>center_id <span class="badge bg-green">string</span></td>
+                    <td>center_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>spiritual_status</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>is_baptized <span class="badge bg-green">boolean</span></td>
+                    <td>is_baptized <span class="badge bg-green">boolean</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>baptism_date</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>joined_date</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                
+                <tr>
+                    <td>status <span class="badge bg-green">string</span></td>
+                    <td>status <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>created_at <span class="badge bg-green">string</span></td>
+                    <td>created_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>updated_at</td>
+                    <td><span class="badge bg-red">MISSING</span></td>
+                    <td>Field missing in backend</td>
+                    <td class="status-error">Missing</td>
+                </tr>
+                </tbody></table><h3>Entity: member_contributions ↔ Table: member_contributions</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Frontend Field</th>
+                    <th>Backend Column</th>
+                    <th>Type Check</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr>
+                    <td>id <span class="badge bg-green">string</span></td>
+                    <td>id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>report_id <span class="badge bg-green">string</span></td>
+                    <td>report_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>member_id <span class="badge bg-green">string</span></td>
+                    <td>member_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>period_id <span class="badge bg-green">string</span></td>
+                    <td>period_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>house_church_id <span class="badge bg-green">string</span></td>
+                    <td>house_church_id <span class="badge bg-green">uuid</span></td>
+                    <td>Frontend uses string IDs (e.g. 'user-01'), Backend expects UUID <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-warning">Type Mismatch</td>
+                </tr>
+                
+                <tr>
+                    <td>contribution_type <span class="badge bg-green">string</span></td>
+                    <td>contribution_type <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>amount <span class="badge bg-green">integer</span></td>
+                    <td>amount <span class="badge bg-green">decimal(152)</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>currency <span class="badge bg-green">string</span></td>
+                    <td>currency <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>recorded_by <span class="badge bg-green">string (custom-id)</span></td>
+                    <td>recorded_by <span class="badge bg-green">text</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                
+                <tr>
+                    <td>recorded_at <span class="badge bg-green">string</span></td>
+                    <td>recorded_at <span class="badge bg-green">timestamp</span></td>
+                    <td>Compatible <span class="badge bg-orange" style="display: none">Mapped</span></td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                </tbody></table>
+    <h2>3. Critical Findings & Recommendations</h2>
+    <div class="recommendation">
+        <h3>Naming Convention Strategy</h3>
+        <p>The frontend uses <strong>camelCase</strong> (e.g., <code>fullName</code>) while the backend uses <strong>snake_case</strong> (e.g., <code>full_name</code>).
+        <strong>Recommendation:</strong> Configure the Supabase JS client to automatically convert cases, or update frontend interfaces to match backend. 
+        Supabase client usually handles snake_case responses.</p>
+    </div>
+    
+    <div class="recommendation">
+        <h3>ID Format Migration</h3>
+        <p>Frontend uses custom string IDs (e.g., <code>"user-001"</code>) while backend enforces <strong>UUIDs</strong>.
+        <strong>Action Required:</strong> The import scripts must generate valid UUIDs or the backend schema must be temporarily relaxed (not recommended). 
+        Update frontend mock data to use UUIDs to match production behavior.</p>
+    </div>
+    
+    <div class="recommendation">
+        <h3>Missing Fields</h3>
+        <p>Several fields exist in the frontend but are missing in the backend:</p>
+        <ul>
+            <li><strong>users.avatar:</strong> Needs to be added to <code>profiles</code> table or handled via Supabase Storage.</li>
+            <li><strong>centers.latitude/longitude:</strong> Critical for mapping features. Add to <code>centers</code> table.</li>
+        </ul>
+    </div>
+
+    <h2>4. Migration Checklist</h2>
+    <ul class="checklist">
+        <li>[Frontend] Update TypeScript interfaces to allow snake_case properties OR configure Supabase client response modifiers.</li>
+        <li>[Frontend] Replace mock IDs (user-001) with valid UUIDs in local state/mock data.</li>
+        <li>[Backend] Add missing columns: <code>avatar</code> to profiles, <code>latitude/longitude</code> to centers.</li>
+        <li>[Backend] Verify <code>stats_*</code> table mapping logic matches frontend expectations.</li>
+    </ul>
+    
+    </body>
+    </html>
+    

@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFA Database Flowchart</title>
+    <!-- We use the CDN, but if offline, this won't load. 
+         However, since you have internet (google ping worked), this should load fine. -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            text-align: center;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #01579b; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IFA Database Visual Map</h1>
+        <p>This diagram shows how data flows in the Integrity For All system.</p>
+        
+        <!-- The Mermaid Code goes here -->
+        <div class="mermaid">
+            graph TD
+            %% Styling
+            classDef org fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+            classDef report fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+            classDef stats fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+
+            %% Organization Node
+            Zone[Zone / Region] --> Center[Worship Center]
+            Center --> House[House Church]
+            
+            %% Users
+            Leader[Leader/Admin] -.->|Submits| Report
+            
+            %% Reporting Flow
+            Center -->|Has Monthly| Report[Monthly Report]
+            House -->|Has Monthly| Report
+            
+            %% The Data (Pillars)
+            Report --> Money(💰 Finance Stats)
+            Report --> People(👥 People Stats)
+            Report --> Family(👨‍👩‍👧 Family Stats)
+            Report --> Impact(🌍 Impact Stats)
+
+            %% Apply Styles
+            class Zone,Center,House org;
+            class Report,Leader report;
+            class Money,People,Family,Impact stats;
+        </div>
+    </div>
+</body>
+</html>

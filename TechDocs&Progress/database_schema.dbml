@@ -1,0 +1,199 @@
+
+// Integrity For All (IFA) - Database Schema Design 2026
+// Compatible with Supabase (PostgreSQL)
+
+Project IFA_Dashboard {
+  database_type: 'PostgreSQL'
+  Note: 'Database design for IFA Annual Reporting and Operational Management'
+}
+
+// -----------------------------------------------------------------------------
+// USER MANAGEMENT & RBAC (Supabase Auth Integration)
+// -----------------------------------------------------------------------------
+
+// Mocking Supabase's internal auth table for diagram validity
+Table auth.users {
+  id uuid [pk]
+  email text
+  created_at timestamp
+}
+
+Table public.profiles {
+  id uuid [pk, ref: - auth.users.id, note: 'Links to Supabase Auth']
+  email text
+  full_name text
+  role user_role [default: 'viewer', note: 'admin, center_lead, house_lead']
+  center_id uuid [ref: > public.centers.id, note: 'Assigned Center']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp
+  
+  Note: 'Extended profile for users, handling roles and access scope.'
+}
+
+Enum user_role {
+  admin
+  center_lead
+  house_lead
+  viewer
+}
+
+// -----------------------------------------------------------------------------
+// ORGANIZATIONAL STRUCTURE
+// -----------------------------------------------------------------------------
+
+Table public.zones {
+  id uuid [pk, default: `gen_random_uuid()`]
+  name text [note: 'e.g., Douala Nord, Douala Sud']
+  region text [default: 'Littoral']
+  created_at timestamp
+}
+
+Table public.centers {
+  id uuid [pk, default: `gen_random_uuid()`]
+  name text [note: 'e.g., Akwa, Bonamoussadi']
+  zone_id uuid [ref: > public.zones.id]
+  address text
+  founded_date date
+  status text [default: 'active']
+  created_at timestamp
+  
+  Note: 'Main worship centers.'
+}
+
+Table public.house_churches {
+  id uuid [pk, default: `gen_random_uuid()`]
+  name text [note: 'e.g., Cellule Espoir']
+  center_id uuid [ref: > public.centers.id]
+  zone_area text [note: 'Specific neighborhood']
+  host_name text [note: 'Name of the host (not necessarily the leader)']
+  status text [default: 'active']
+  created_at timestamp
+  
+  Note: 'Home assemblies attached to a Center.'
+}
+
+// -----------------------------------------------------------------------------
+// REPORTING CORE
+// -----------------------------------------------------------------------------
+
+Table public.reporting_periods {
+  id uuid [pk, default: `gen_random_uuid()`]
+  name text [note: 'e.g., January 2025']
+  start_date date
+  end_date date
+  is_locked boolean [default: false, note: 'Prevents edits after closure']
+  fiscal_year int [note: 'e.g., 2025']
+}
+
+Table public.reports {
+  id uuid [pk, default: `gen_random_uuid()`]
+  period_id uuid [ref: > public.reporting_periods.id]
+  
+  // Polymorphic-like association: A report is either for a Center OR a House Church
+  center_id uuid [ref: > public.centers.id, null]
+  house_church_id uuid [ref: > public.house_churches.id, null]
+  
+  submitted_by uuid [ref: > public.profiles.id]
+  submitted_at timestamp
+  status report_status [default: 'draft']
+  
+  Note: 'Header table for a monthly statistical submission.'
+}
+
+Enum report_status {
+  draft
+  submitted
+  approved
+  rejected
+}
+
+// -----------------------------------------------------------------------------
+// METRICS & STATISTICS (Broken down by domain)
+// -----------------------------------------------------------------------------
+
+Table public.stats_financial {
+  report_id uuid [pk, ref: - public.reports.id]
+  currency text [default: 'XAF']
+  
+  // Income
+  tithes decimal(15,2) [default: 0, note: 'Dîmes']
+  offerings_general decimal(15,2) [default: 0, note: 'Offrandes courantes']
+  offerings_events decimal(15,2) [default: 0, note: 'Offrandes évènements']
+  offerings_investment decimal(15,2) [default: 0, note: 'Offrandes investissements']
+  
+  // Expenses (Aggregated for reporting)
+  expense_admin decimal(15,2) [default: 0]
+  expense_rent decimal(15,2) [default: 0]
+  expense_mission decimal(15,2) [default: 0]
+  expense_events decimal(15,2) [default: 0]
+  
+  notes text
+}
+
+Table public.stats_people {
+  report_id uuid [pk, ref: - public.reports.id]
+  
+  // Attendance (Headcount)
+  attendance_men int [default: 0]
+  attendance_women int [default: 0]
+  attendance_children int [default: 0]
+  attendance_total int [note: 'Calculated or manual entry']
+  
+  // Growth
+  new_converts int [default: 0, note: 'Gagner les perdus']
+  first_timers int [default: 0]
+  baptisms int [default: 0]
+  
+  // Membership Flow
+  members_active_start int
+  members_gained int
+  members_lost int [note: 'Churn']
+  members_active_end int
+}
+
+Table public.stats_family {
+  report_id uuid [pk, ref: - public.reports.id]
+  
+  marriages int [default: 0]
+  engagements int [default: 0, note: 'Fiançailles']
+  births int [default: 0, note: 'Naissances']
+  couples_counseled int [default: 0]
+}
+
+Table public.stats_activities {
+  report_id uuid [pk, ref: - public.reports.id]
+  
+  // Training / Equipping
+  people_trained int [default: 0]
+  pastors_certified int [default: 0]
+  
+  // Social Impact
+  social_actions_count int [default: 0]
+  meals_distributed int [default: 0]
+  youth_mentored int [default: 0]
+  
+  // Events
+  home_visits int [default: 0]
+  evangelism_outreach_count int [default: 0]
+}
+
+// -----------------------------------------------------------------------------
+// AUDIT TRAIL
+// -----------------------------------------------------------------------------
+
+Table public.audit_logs {
+  id uuid [pk, default: `gen_random_uuid()`]
+  table_name text
+  record_id uuid
+  action text [note: 'INSERT, UPDATE, DELETE']
+  old_data jsonb
+  new_data jsonb
+  performed_by uuid [ref: > public.profiles.id]
+  performed_at timestamp [default: `now()`]
+}
+
+// -----------------------------------------------------------------------------
+// REFS (Implicitly defined above, but explicit for clarity if needed)
+// -----------------------------------------------------------------------------
+// Ref: public.reports.center_id > public.centers.id
+// Ref: public.reports.house_church_id > public.house_churches.id

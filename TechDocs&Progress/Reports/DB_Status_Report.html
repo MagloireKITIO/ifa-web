@@ -1,0 +1,151 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IFA Database Status Report</title>
+        <style>
+            :root { --primary: #00695c; --secondary: #4db6ac; --light: #e0f2f1; --dark: #004d40; --danger: #d32f2f; }
+            body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; }
+            h1 { color: var(--primary); border-bottom: 2px solid var(--secondary); padding-bottom: 10px; }
+            .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+            .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid var(--secondary); }
+            .card.empty { border-left-color: var(--danger); }
+            .card h3 { margin-top: 0; color: var(--dark); }
+            .stat { font-size: 2em; font-weight: bold; }
+            .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.8em; color: white; float: right; }
+            .badge-ok { background: var(--primary); }
+            .badge-empty { background: var(--danger); }
+            
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background-color: var(--light); color: var(--dark); }
+            tr:hover { background-color: #f9f9f9; }
+            
+            .section-title { margin-top: 40px; color: var(--dark); }
+            .timestamp { color: #666; font-style: italic; margin-bottom: 20px; }
+        </style>
+    </head>
+    <body>
+        <h1>IFA Database Status Report</h1>
+        <div class="timestamp">Generated on: 2026-02-04 12:36:00</div>
+        
+        <h2 class="section-title">Overview</h2>
+        <div class="dashboard">
+    
+        <div class="card ">
+            <span class="badge badge-ok">SEEDED</span>
+            <h3>zones</h3>
+            <div class="stat">1</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card ">
+            <span class="badge badge-ok">SEEDED</span>
+            <h3>centers</h3>
+            <div class="stat">6</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card ">
+            <span class="badge badge-ok">SEEDED</span>
+            <h3>house_churches</h3>
+            <div class="stat">37</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>profiles</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card ">
+            <span class="badge badge-ok">SEEDED</span>
+            <h3>members</h3>
+            <div class="stat">464</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>reporting_periods</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>reports</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>stats_financial</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>stats_people</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>stats_family</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>stats_activities</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        
+        <div class="card empty">
+            <span class="badge badge-empty">EMPTY</span>
+            <h3>audit_logs</h3>
+            <div class="stat">0</div>
+            <p>Records</p>
+        </div>
+        </div><h2 class="section-title">Detailed Data Inspection</h2>
+        <div class="card" style="margin-bottom: 20px; border-left: none;">
+            <h3>zones <small>(Top 5 Records)</small></h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+        <th>id</th><th>name</th><th>region</th><th>created_at</th></tr></thead><tbody><tr><td>eff8ba15-4f98-4761-b858-41da40848b7f</td><td>Douala</td><td>Littoral</td><td>2026-02-04T09:37:35.129886</td></tr></tbody></table></div></div>
+        <div class="card" style="margin-bottom: 20px; border-left: none;">
+            <h3>centers <small>(Top 5 Records)</small></h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+        <th>id</th><th>name</th><th>zone_id</th><th>address</th><th>founded_date</th><th>status</th><th>created_at</th></tr></thead><tbody><tr><td>fe9f8264-db47-458a-ac09-56c8c0df0c73</td><td>COGEFAR</td><td>eff8ba15-4f98-4761-b858-41da40848b7f</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:37:36.488398</td></tr><tr><td>a5f02454-6cea-4983-9a5e-d23383516e99</td><td>BONAMOUSSADI</td><td>eff8ba15-4f98-4761-b858-41da40848b7f</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:37:38.518085</td></tr><tr><td>c12af655-35d2-4150-9298-aac20b896f94</td><td>JAPOMA</td><td>eff8ba15-4f98-4761-b858-41da40848b7f</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:37:39.467695</td></tr><tr><td>391fd1c6-a937-4577-b503-07788a422baa</td><td>BONABERI</td><td>eff8ba15-4f98-4761-b858-41da40848b7f</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:37:50.224258</td></tr><tr><td>b5136186-1fc1-418b-a204-9261a8286fd7</td><td>LOGBESSOU</td><td>eff8ba15-4f98-4761-b858-41da40848b7f</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T10:32:48.40901</td></tr></tbody></table></div></div>
+        <div class="card" style="margin-bottom: 20px; border-left: none;">
+            <h3>house_churches <small>(Top 5 Records)</small></h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+        <th>id</th><th>name</th><th>center_id</th><th>zone_area</th><th>host_name</th><th>status</th><th>created_at</th></tr></thead><tbody><tr><td>021cb434-0dd9-4dad-824e-c7edb68db756</td><td>MEKOULOU M</td><td>a5f02454-6cea-4983-9a5e-d23383516e99</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:47:04.449192</td></tr><tr><td>9f37beab-ed4d-4363-9d70-fa66357550c3</td><td>DOUMBE</td><td>a5f02454-6cea-4983-9a5e-d23383516e99</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:47:15.401354</td></tr><tr><td>81388562-ff3a-495c-a907-4ff9ed317d2f</td><td>ONOMO</td><td>a5f02454-6cea-4983-9a5e-d23383516e99</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:47:18.461606</td></tr><tr><td>64206efa-07cc-4a8d-a43c-5387c54433df</td><td>KOLLO DAVID</td><td>a5f02454-6cea-4983-9a5e-d23383516e99</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:47:46.216433</td></tr><tr><td>31201b34-49ae-430a-9a2f-487cb546bab5</td><td>ZEBAZE ERIC</td><td>a5f02454-6cea-4983-9a5e-d23383516e99</td><td>None</td><td>None</td><td>active</td><td>2026-02-04T09:47:20.616831</td></tr></tbody></table></div></div>
+        <div class="card" style="margin-bottom: 20px; border-left: none;">
+            <h3>members <small>(Top 5 Records)</small></h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+        <th>id</th><th>full_name</th><th>phone</th><th>birth_year</th><th>conversion_year</th><th>joined_ifa_year</th><th>is_baptized</th><th>marriage_date</th><th>center_id</th><th>house_church_id</th><th>status</th><th>notes</th><th>created_at</th></tr></thead><tbody><tr><td>143bf951-cd16-46f0-9fe9-626bfb86ed5d</td><td>TIM AKON</td><td>None</td><td>None</td><td>None</td><td>None</td><td>False</td><td>None</td><td>c12af655-35d2-4150-9298-aac20b896f94</td><td>None</td><td>active</td><td>None</td><td>2026-02-04T09:41:19.677128</td></tr><tr><td>15569cd0-b5f0-48c9-b028-7a6d276b0465</td><td>Lionel Ankouo</td><td>None</td><td>None</td><td>None</td><td>None</td><td>False</td><td>None</td><td>391fd1c6-a937-4577-b503-07788a422baa</td><td>78596e44-fbf3-4aa9-aed9-426fe1486af9</td><td>active</td><td>Actif</td><td>2026-02-04T09:40:01.853385</td></tr><tr><td>1e5abb94-b37f-406e-88cb-d1b99176c1ef</td><td>Divine Ankouo</td><td>None</td><td>None</td><td>None</td><td>None</td><td>False</td><td>None</td><td>391fd1c6-a937-4577-b503-07788a422baa</td><td>78596e44-fbf3-4aa9-aed9-426fe1486af9</td><td>active</td><td>Active</td><td>2026-02-04T09:40:02.168043</td></tr><tr><td>cdd82c18-269c-48ec-9536-eaa88c93545e</td><td>Elroy Ankouo</td><td>None</td><td>None</td><td>None</td><td>None</td><td>False</td><td>None</td><td>391fd1c6-a937-4577-b503-07788a422baa</td><td>78596e44-fbf3-4aa9-aed9-426fe1486af9</td><td>active</td><td>Actif</td><td>2026-02-04T09:40:02.475298</td></tr><tr><td>01934c7e-fb1e-4b19-be85-9207846be890</td><td>Nyla Ankouo</td><td>None</td><td>None</td><td>None</td><td>None</td><td>False</td><td>None</td><td>391fd1c6-a937-4577-b503-07788a422baa</td><td>78596e44-fbf3-4aa9-aed9-426fe1486af9</td><td>active</td><td>Active</td><td>2026-02-04T09:40:02.765584</td></tr></tbody></table></div></div>
+    </body>
+    </html>
+    

@@ -1,0 +1,91 @@
+
+// IFA Simplified Database Model for Stakeholders
+// Copy this code into https://dbdiagram.io to see the visual
+
+Project IFA_Simplified {
+  database_type: 'Concept'
+  Note: 'Non-technical view of the IFA Data System'
+}
+
+// -----------------------------------------------------------------------------
+// 1. THE ORGANIZATION (Who we are)
+// -----------------------------------------------------------------------------
+
+Table Organization_Structure {
+  Zone text [note: 'e.g. Douala Nord']
+  Center text [note: 'e.g. Akwa Center']
+  House_Church text [note: 'e.g. Cellule Espoir']
+  
+  Note: 'The hierarchy of locations'
+}
+
+Table Users {
+  Name text
+  Role text [note: 'Admin, Center Leader, House Leader']
+  Assigned_Location text
+}
+
+// -----------------------------------------------------------------------------
+// 2. THE REPORT (The Container)
+// -----------------------------------------------------------------------------
+
+Table Monthly_Report {
+  Month text [note: 'Jan 2026']
+  Submitted_By text
+  Status text [note: 'Draft / Approved']
+  
+  Note: 'The main folder for monthly data'
+}
+
+// -----------------------------------------------------------------------------
+// 3. THE 4 PILLARS (The Data)
+// -----------------------------------------------------------------------------
+
+Table Finance_Bucket {
+  Tithes currency
+  Offerings currency
+  Event_Seeds currency
+  Mission_Support currency
+  
+  Note: 'CONFIDENTIAL: Money collected & spent'
+}
+
+Table People_Bucket {
+  Men count
+  Women count
+  Children count
+  New_Converts count
+  Baptisms count
+  
+  Note: 'Growth & Attendance stats'
+}
+
+Table Family_Bucket {
+  Marriages count
+  Births count
+  Engagements count
+  Counseling_Sessions count
+  
+  Note: 'Social stability milestones'
+}
+
+Table Impact_Bucket {
+  People_Trained count
+  Social_Actions count
+  Youth_Mentored count
+  
+  Note: 'Activities & Community work'
+}
+
+// -----------------------------------------------------------------------------
+// CONNECTIONS
+// -----------------------------------------------------------------------------
+
+Ref: Users.Assigned_Location > Organization_Structure.Center
+Ref: Monthly_Report.Submitted_By - Users.Name
+
+// Each Report contains these 4 sheets
+Ref: Monthly_Report.Month - Finance_Bucket.Tithes
+Ref: Monthly_Report.Month - People_Bucket.Men
+Ref: Monthly_Report.Month - Family_Bucket.Marriages
+Ref: Monthly_Report.Month - Impact_Bucket.People_Trained

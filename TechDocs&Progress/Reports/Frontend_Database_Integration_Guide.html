@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Database Integration Guide - IFA Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --code-bg: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background-color: var(--surface-color);
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .version-badge {
+            background-color: var(--code-bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .search-container {
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 1rem;
+            z-index: 10;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #searchInput:focus {
+            border-color: var(--primary-color);
+        }
+
+        .section {
+            background-color: var(--surface-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            border-bottom: 2px solid var(--code-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background-color: var(--code-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .data-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+
+        pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .type-string { background-color: #dbeafe; color: #1e40af; }
+        .type-number { background-color: #dcfce7; color: #166534; }
+        .type-boolean { background-color: #fef9c3; color: #854d0e; }
+        .type-uuid { background-color: #f3e8ff; color: #6b21a8; }
+        .type-date { background-color: #ffedd5; color: #9a3412; }
+
+        .required { color: var(--danger-color); font-weight: bold; }
+        .optional { color: var(--text-secondary); font-style: italic; }
+
+        .usage-note {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .copy-btn {
+            background-color: var(--code-bg);
+            border: none;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .copy-btn:hover {
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Frontend Database Integration Guide</h1>
+                <p>Comprehensive reference for data variables, types, and database mappings.</p>
+            </div>
+            <div class="version-badge">v1.0.0 | Updated: 2026-02-05</div>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search for variables, types, or table names...">
+        </div>
+
+        <!-- 1. USERS & AUTHENTICATION -->
+        <div class="section" id="users">
+            <h2>1. Users & Profiles (<code>profiles</code>)</h2>
+            <p><strong>TypeScript Interface:</strong> <code>User</code></p>
+            <p><strong>DB Table:</strong> <code>public.profiles</code></p>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description & Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td><span class="type-badge type-uuid">string (UUID)</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>id</code></td>
+                        <td>Primary Key. Linked to Supabase Auth ID.</td>
+                    </tr>
+                    <tr>
+                        <td><code>email</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>email</code></td>
+                        <td>User's email address.</td>
+                    </tr>
+                    <tr>
+                        <td><code>full_name</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>full_name</code></td>
+                        <td>Display name of the user.</td>
+                    </tr>
+                    <tr>
+                        <td><code>role</code></td>
+                        <td><span class="type-badge type-string">UserRole</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>role</code></td>
+                        <td>Enum: 'admin', 'center_lead', 'house_lead', 'viewer'. Controls permissions.</td>
+                    </tr>
+                    <tr>
+                        <td><code>center_id</code></td>
+                        <td><span class="type-badge type-uuid">string | null</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>center_id</code></td>
+                        <td>FK to <code>centers</code>. Required for 'center_lead'.</td>
+                    </tr>
+                    <tr>
+                        <td><code>house_church_id</code></td>
+                        <td><span class="type-badge type-uuid">string | null</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>house_church_id</code></td>
+                        <td>FK to <code>house_churches</code>. Required for 'house_lead'.</td>
+                    </tr>
+                    <tr>
+                        <td><code>avatar</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>avatar</code></td>
+                        <td>URL to avatar image.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="usage-note">
+                <strong>Frontend Usage:</strong> Use <code>useAuth()</code> hook to access the current user's profile. The profile is automatically fetched and typed as <code>User</code>.
+            </div>
+        </div>
+
+        <!-- 2. ORGANIZATION STRUCTURE -->
+        <div class="section" id="structure">
+            <h2>2. Organization Structure</h2>
+            
+            <h3>Centers (<code>centers</code>)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>id</code></td>
+                        <td>Unique identifier.</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>name</code></td>
+                        <td>Name of the center (e.g., "IFA Bonamoussadi").</td>
+                    </tr>
+                    <tr>
+                        <td><code>zone_id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>zone_id</code></td>
+                        <td>FK to <code>zones</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="optional">Default 'active'</span></td>
+                        <td><code>status</code></td>
+                        <td>'active' or 'inactive'.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>House Churches (<code>house_churches</code>)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>id</code></td>
+                        <td>Unique identifier.</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>name</code></td>
+                        <td>Name/Code of the house church.</td>
+                    </tr>
+                    <tr>
+                        <td><code>center_id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>center_id</code></td>
+                        <td>Parent center ID.</td>
+                    </tr>
+                    <tr>
+                        <td><code>host_name</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>host_name</code></td>
+                        <td>Name of the host family/person.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. MEMBERS -->
+        <div class="section" id="members">
+            <h2>3. Members (<code>members</code>)</h2>
+            <p><strong>TypeScript Interface:</strong> <code>Member</code> (inferred)</p>
+            <p><strong>DB Table:</strong> <code>public.members</code></p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>id</code></td>
+                        <td>Unique identifier.</td>
+                    </tr>
+                    <tr>
+                        <td><code>full_name</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>full_name</code></td>
+                        <td>Member's full name.</td>
+                    </tr>
+                    <tr>
+                        <td><code>phone</code></td>
+                        <td><span class="type-badge type-string">string</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>phone</code></td>
+                        <td>Contact number.</td>
+                    </tr>
+                    <tr>
+                        <td><code>birth_year</code></td>
+                        <td><span class="type-badge type-number">number</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>birth_year</code></td>
+                        <td>Year of birth (YYYY).</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_baptized</code></td>
+                        <td><span class="type-badge type-boolean">boolean</span></td>
+                        <td><span class="optional">Default false</span></td>
+                        <td><code>is_baptized</code></td>
+                        <td>Baptism status.</td>
+                    </tr>
+                    <tr>
+                        <td><code>center_id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="optional">Optional</span></td>
+                        <td><code>center_id</code></td>
+                        <td>Linked center.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. REPORTS & STATS -->
+        <div class="section" id="reports">
+            <h2>4. Reports & Statistics</h2>
+            <p><strong>DB Tables:</strong> <code>reports</code>, <code>stats_financial</code>, <code>stats_people</code>, <code>stats_family</code>, <code>stats_activities</code></p>
+
+            <h3>Core Report Data (<code>reports</code>)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>id</code></td>
+                        <td>Report ID.</td>
+                    </tr>
+                    <tr>
+                        <td><code>period_id</code></td>
+                        <td><span class="type-badge type-uuid">string</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>period_id</code></td>
+                        <td>Link to Reporting Period.</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td><span class="type-badge type-string">ReportStatus</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>status</code></td>
+                        <td>'draft', 'submitted', 'approved', 'rejected'.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Financial Stats (<code>stats_financial</code>)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>tithes</code></td>
+                        <td><span class="type-badge type-number">number</span></td>
+                        <td><span class="optional">Default 0</span></td>
+                        <td><code>tithes</code></td>
+                        <td>Total tithes collected.</td>
+                    </tr>
+                    <tr>
+                        <td><code>offerings_general</code></td>
+                        <td><span class="type-badge type-number">number</span></td>
+                        <td><span class="optional">Default 0</span></td>
+                        <td><code>offerings_general</code></td>
+                        <td>General offerings.</td>
+                    </tr>
+                    <tr>
+                        <td><code>expense_total</code></td>
+                        <td><span class="type-badge type-number">number</span></td>
+                        <td><span class="optional">Calculated</span></td>
+                        <td>N/A</td>
+                        <td>Sum of all expense_* fields.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>People Stats (<code>stats_people</code>)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Data Type</th>
+                        <th>Required</th>
+                        <th>DB Mapping</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>attendance_total</code></td>
+                        <td><span class="type-badge type-number">number</span></td>
+                        <td><span class="required">Yes</span></td>
+                        <td><code>attendance_total</code></td>
+                        <td>Total Sunday attendance.</td>
+                    </tr>
+                    <tr>
+                        <td><code>new_converts</code></td>
+                        <td><span class="type-badge type-number">number</span></td>
+                        <td><span class="optional">Default 0</span></td>
+                        <td><code>new_converts</code></td>
+                        <td>Number of new converts.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 5. API INTEGRATION -->
+        <div class="section" id="api">
+            <h2>5. API Integration & Query Examples</h2>
+            
+            <h3>Fetching User Reports</h3>
+            <pre><code>
+// Example: Fetching full reports with joined statistics
+const { data, error } = await supabase
+  .from('reports')
+  .select(`
+    *,
+    stats_financial(*),
+    stats_people(*),
+    stats_family(*),
+    stats_activities(*),
+    reporting_periods(*),
+    centers(name),
+    house_churches(name)
+  `)
+  .eq('submitted_by', userId);
+            </code></pre>
+
+            <h3>Inserting a New Report</h3>
+            <pre><code>
+// 1. Create the base report
+const { data: report, error } = await supabase
+  .from('reports')
+  .insert({
+    period_id: periodId,
+    center_id: centerId,
+    submitted_by: userId,
+    status: 'draft'
+  })
+  .select()
+  .single();
+
+// 2. Insert statistics (using the returned report.id)
+await supabase.from('stats_people').insert({
+  report_id: report.id,
+  attendance_total: 150,
+  new_converts: 2
+});
+            </code></pre>
+        </div>
+
+    </div>
+
+    <script>
+        // Search Functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if(text.includes(searchText)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Hide empty sections
+            document.querySelectorAll('.section').forEach(section => {
+                const visibleRows = section.querySelectorAll('tbody tr:not([style*="display: none"])');
+                if (visibleRows.length === 0 && section.querySelector('tbody')) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
