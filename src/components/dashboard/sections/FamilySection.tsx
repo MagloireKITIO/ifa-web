@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { StatCard } from '../StatCard';
 import { EmptyState } from '../EmptyState';
+import { DashboardLoader } from '../DashboardLoader';
 import { Home, Heart, Baby, Users, MessageCircle } from 'lucide-react';
 import { useFamilyKPIs } from '@/lib/react-query/hooks';
 
@@ -11,13 +12,7 @@ export function FamilySection() {
   const { data: kpis, isLoading: loading } = useFamilyKPIs();
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2].map((i) => (
-          <div key={i} className="h-64 bg-white rounded-xl animate-pulse" />
-        ))}
-      </div>
-    );
+    return <DashboardLoader loadingStates={[loading]} />;
   }
 
   if (!kpis || !kpis.hasData) {

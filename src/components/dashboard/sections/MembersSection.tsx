@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '../StatCard';
 import { EmptyState } from '../EmptyState';
+import { DashboardLoader } from '../DashboardLoader';
 import {
   Users,
   UserCheck,
@@ -41,13 +42,7 @@ export function MembersSection() {
   const { data: kpis, isLoading: loading } = useMembersKPIs();
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-64 bg-white rounded-xl animate-pulse" />
-        ))}
-      </div>
-    );
+    return <DashboardLoader loadingStates={[loading]} />;
   }
 
   if (!kpis || kpis.totalMembers === 0) {

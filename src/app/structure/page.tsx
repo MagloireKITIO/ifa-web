@@ -50,6 +50,7 @@ export default function StructurePage() {
   const [zones, setZones] = useState<Zone[]>([]);
   const [houseChurches, setHouseChurches] = useState<HouseChurch[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZone, setSelectedZone] = useState<string>('all');
 
@@ -121,13 +122,48 @@ export default function StructurePage() {
   };
 
   const handleDeleteZone = async (zoneId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) return;
-    const result = await deleteZone(zoneId);
-    if (result.success) {
-      showToast('success', 'Zone supprimée avec succès');
-      loadStructureData();
-    } else {
-      showToast('error', result.error || 'Erreur lors de la suppression');
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+
+      // Première vérification : vérifier s'il y a des dépendances
+      const checkResult = await deleteZone(zoneId, false);
+
+      const centersCount = checkResult.centersCount || 0;
+
+      // Construire le message de confirmation
+      let message = '';
+      if (centersCount > 0) {
+        message = `⚠️ ATTENTION : Cette zone contient :\n\n` +
+          `• ${centersCount} centre(s)\n\n` +
+          `La suppression de la zone entraînera :\n` +
+          `- Suppression de tous les centres\n` +
+          `- Suppression de toutes les cellules\n` +
+          `- Dissociation de tous les membres\n\n` +
+          `Voulez-vous vraiment continuer ?`;
+      } else {
+        message = 'Êtes-vous sûr de vouloir supprimer cette zone ?';
+      }
+
+      if (!confirm(message)) {
+        setIsDeleting(false);
+        return;
+      }
+
+      // Afficher un toast de progression
+      showToast('info', 'Suppression en cours...');
+
+      // Suppression en cascade
+      const cascadeResult = await deleteZone(zoneId, true);
+      if (cascadeResult.success) {
+        showToast('success', centersCount > 0 ? 'Zone, centres et cellules supprimés avec succès' : 'Zone supprimée avec succès');
+        await loadStructureData();
+      } else {
+        showToast('error', cascadeResult.error || 'Erreur lors de la suppression');
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -153,13 +189,60 @@ export default function StructurePage() {
   };
 
   const handleDeleteCenter = async (centerId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce centre ?')) return;
-    const result = await deleteCenter(centerId);
-    if (result.success) {
-      showToast('success', 'Centre supprimé avec succès');
-      loadStructureData();
-    } else {
-      showToast('error', result.error || 'Erreur lors de la suppression');
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+
+      // Première vérification : vérifier s'il y a des dépendances
+      const checkResult = await deleteCenter(centerId, false);
+
+      const housesCount = checkResult.housesCount || 0;
+      const membersCount = checkResult.membersCount || 0;
+      const profilesCount = checkResult.profilesCount || 0;
+      const childrenCount = checkResult.childrenCount || 0;
+      const reportsCount = checkResult.reportsCount || 0;
+
+      const totalCount = housesCount + membersCount + profilesCount + childrenCount + reportsCount;
+
+      // Construire le message de confirmation
+      let message = '';
+      if (totalCount > 0) {
+        const details = [];
+        if (housesCount > 0) details.push(`${housesCount} cellule(s)`);
+        if (membersCount > 0) details.push(`${membersCount} membre(s)`);
+        if (profilesCount > 0) details.push(`${profilesCount} profil(s)`);
+        if (childrenCount > 0) details.push(`${childrenCount} enfant(s)`);
+        if (reportsCount > 0) details.push(`${reportsCount} rapport(s)`);
+
+        message = `⚠️ ATTENTION : Ce centre contient :\n\n` +
+          `• ${details.join('\n• ')}\n\n` +
+          `La suppression du centre entraînera :\n` +
+          `- Suppression de toutes les cellules\n` +
+          `- Dissociation de tous les éléments liés\n\n` +
+          `Voulez-vous vraiment continuer ?`;
+      } else {
+        message = 'Êtes-vous sûr de vouloir supprimer ce centre ?';
+      }
+
+      if (!confirm(message)) {
+        setIsDeleting(false);
+        return;
+      }
+
+      // Afficher un toast de progression
+      showToast('info', 'Suppression en cours...');
+
+      // Suppression en cascade
+      const cascadeResult = await deleteCenter(centerId, true);
+      if (cascadeResult.success) {
+        showToast('success', totalCount > 0 ? 'Centre et dépendances supprimés avec succès' : 'Centre supprimé avec succès');
+        await loadStructureData();
+      } else {
+        showToast('error', cascadeResult.error || 'Erreur lors de la suppression');
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -185,13 +268,59 @@ export default function StructurePage() {
   };
 
   const handleDeleteHouseChurch = async (houseId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette cellule ?')) return;
-    const result = await deleteHouseChurch(houseId);
-    if (result.success) {
-      showToast('success', 'Cellule supprimée avec succès');
-      loadStructureData();
-    } else {
-      showToast('error', result.error || 'Erreur lors de la suppression');
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+
+      // Première vérification : vérifier s'il y a des dépendances
+      const checkResult = await deleteHouseChurch(houseId, false);
+
+      const membersCount = checkResult.membersCount || 0;
+      const profilesCount = checkResult.profilesCount || 0;
+      const childrenCount = checkResult.childrenCount || 0;
+      const reportsCount = checkResult.reportsCount || 0;
+      const contributionsCount = checkResult.contributionsCount || 0;
+
+      const totalCount = membersCount + profilesCount + childrenCount + reportsCount + contributionsCount;
+
+      // Construire le message de confirmation
+      let message = '';
+      if (totalCount > 0) {
+        const details = [];
+        if (membersCount > 0) details.push(`${membersCount} membre(s)`);
+        if (profilesCount > 0) details.push(`${profilesCount} profil(s)`);
+        if (childrenCount > 0) details.push(`${childrenCount} enfant(s)`);
+        if (reportsCount > 0) details.push(`${reportsCount} rapport(s)`);
+        if (contributionsCount > 0) details.push(`${contributionsCount} contribution(s)`);
+
+        message = `⚠️ ATTENTION : Cette cellule contient :\n\n` +
+          `• ${details.join('\n• ')}\n\n` +
+          `La suppression de la cellule entraînera :\n` +
+          `- Dissociation de tous les éléments liés\n\n` +
+          `Voulez-vous vraiment continuer ?`;
+      } else {
+        message = 'Êtes-vous sûr de vouloir supprimer cette cellule ?';
+      }
+
+      if (!confirm(message)) {
+        setIsDeleting(false);
+        return;
+      }
+
+      // Afficher un toast de progression
+      showToast('info', 'Suppression en cours...');
+
+      // Suppression avec mise à NULL
+      const cascadeResult = await deleteHouseChurch(houseId, true);
+      if (cascadeResult.success) {
+        showToast('success', 'Cellule supprimée avec succès');
+        await loadStructureData();
+      } else {
+        showToast('error', cascadeResult.error || 'Erreur lors de la suppression');
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -227,6 +356,17 @@ export default function StructurePage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <TopNavigation />
+
+      {/* Overlay de suppression en cours */}
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+            <p className="text-lg font-medium">Suppression en cours...</p>
+            <p className="text-sm text-muted-foreground">Veuillez patienter</p>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* En-tête avec boutons d'action */}

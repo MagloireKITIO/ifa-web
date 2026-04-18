@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { StatCard } from '../StatCard';
 import { EmptyState } from '../EmptyState';
+import { DashboardLoader } from '../DashboardLoader';
 import {
   DollarSign,
   TrendingUp,
@@ -19,13 +20,7 @@ export function FinancialSection() {
   const { data: kpis, isLoading: loading } = useFinancialKPIs();
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2].map((i) => (
-          <div key={i} className="h-64 bg-white rounded-xl animate-pulse" />
-        ))}
-      </div>
-    );
+    return <DashboardLoader loadingStates={[loading]} />;
   }
 
   if (!kpis || !kpis.hasData) {
