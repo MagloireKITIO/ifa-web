@@ -242,6 +242,13 @@ CREATE TABLE public.member_contributions (
 -- -----------------------------------------------------------------------------
 
 -- Helper Functions
+CREATE OR REPLACE FUNCTION public.keep_alive()
+RETURNS text AS $$
+BEGIN
+  RETURN 'OK';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION public.get_my_role()
 RETURNS public.user_role AS $$
   SELECT role FROM public.profiles WHERE id = auth.uid();
