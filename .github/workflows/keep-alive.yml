@@ -1,43 +1,106 @@
-name: Keep Alive
+name: Keep-Alive (Git Repo & Supabase DB)
 
 on:
   schedule:
-    # Run every week (Sundays at 00:00 UTC) to keep repo and Supabase active
-    - cron: '0 0 * * 0'
-  workflow_dispatch: # Allow manual trigger
-
-permissions:
-  contents: write
+    # Run every 6 hours (00:00, 06:00, 12:00, 18:00 UTC) — weekly is too infrequent
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
-  keep-alive:
+  # ──────────────────────────────────────────────────────────────
+  # JOB 1 — Git repository keep-alive (prevents workflow disabling)
+  # ──────────────────────────────────────────────────────────────
+  git-repo-keep-alive:
+    name: Git Repository Keep-Alive
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          persist-credentials: true
 
-      - name: Keep Supabase DB alive
+      - name: Configure Git
+        run: |
+          git config --global user.name "Keep-Alive Bot"
+          git config --global user.email "keep-alive-bot@users.noreply.github.com"
+
+      - name: Create keep-alive activity
+        run: |
+          echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') - Keep-alive check" > .keep-alive
+          git add .keep-alive
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: keep-alive $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            git push origin master
+          fi
+
+  # ──────────────────────────────────────────────────────────────
+  # JOB 2 — Supabase keep-alive (prevents free-tier DB pausing)
+  # ──────────────────────────────────────────────────────────────
+  supabase-keep-alive:
+    name: Supabase Database Keep-Alive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Supabase REST Health Endpoint
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          echo "Pinging Supabase to keep database active..."
-          curl -X POST "${SUPABASE_URL}/rest/v1/rpc/keep_alive" \
-            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{}' || echo "Keep-alive ping sent (response may vary)"
+          echo "Testing Supabase connectivity..."
 
-      - name: Update keep-alive timestamp
-        run: |
-          echo "Last keep-alive: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" > .github/keep-alive.txt
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "ERROR: NEXT_PUBLIC_SUPABASE_URL secret is not set"
+            exit 1
+          fi
 
-      - name: Commit keep-alive activity
+          HTTP_STATUS=$(curl -s -o /tmp/supabase_response.txt -w "%{http_code}" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            "$SUPABASE_URL/rest/v1/" --max-time 20)
+
+          echo "Supabase REST HTTP status: $HTTP_STATUS"
+          echo "Response body: $(cat /tmp/supabase_response.txt)"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ Supabase REST endpoint is healthy"
+          else
+            echo "⚠️  Got HTTP $HTTP_STATUS — sending wake-up ping..."
+            # Send a second request to attempt to wake a paused DB
+            curl -s \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              "$SUPABASE_URL/rest/v1/" --max-time 30 || true
+            echo "Wake-up ping sent."
+          fi
+
+      - name: Database Keep-Alive Query
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .github/keep-alive.txt
-          git commit -m "chore: keep-alive ping [skip ci]" || echo "No changes to commit"
-          git push || echo "Nothing to push"
+          # Use curl to run a lightweight REST query — no npm install needed
+          echo "Running keep-alive table query..."
+
+          HTTP_STATUS=$(curl -s -o /tmp/query_response.txt -w "%{http_code}" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Accept: application/json" \
+            "$SUPABASE_URL/rest/v1/users?select=id&limit=1" --max-time 20)
+
+          echo "Query HTTP status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Database keep-alive query successful"
+          elif [ "$HTTP_STATUS" = "404" ]; then
+            echo "✅ DB is alive (table not found — that's OK for keep-alive)"
+          else
+            echo "⚠️  Query returned $HTTP_STATUS — DB may still be waking up"
+            echo "Response: $(cat /tmp/query_response.txt)"
+          fi
+
+          echo "Keep-alive complete"
